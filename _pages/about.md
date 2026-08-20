@@ -6,7 +6,7 @@ subtitle: # your tagline / affiliation goes here
 
 profile:
   align: right
-  image: # add a photo named prof_pic.jpg to assets/img/ and put the filename here
+  image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   more_info: # optional: contact info / address shown under your photo
 
@@ -24,4 +24,20 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-I'm a Computer Science undergraduate at [Harvard](https://www.harvard.edu/), with interests in efficient machine learning. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
+<style>
+  /* Rounder corners on the profile photo (default theme radius is small) */
+  .profile img {
+    border-radius: 24px;
+  }
+  /* Make the profile photo a bit smaller */
+  .profile {
+    max-width: 200px;
+  }
+  /* Larger bio text */
+  article p {
+    font-size: 1.15rem;
+    line-height: 1.7;
+  }
+</style>
+
+I am an undergrad at [Harvard](https://www.harvard.edu/) with interests in efficient machine learning and model architectures. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
