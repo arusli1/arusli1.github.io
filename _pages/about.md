@@ -10,7 +10,7 @@ profile:
   image_circular: false # crops the image to make it circular
   more_info: # optional: contact info / address shown under your photo
 
-selected_papers: false # includes a list of papers marked as "selected={true}"
+selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 
 announcements:
@@ -38,24 +38,42 @@ latest_posts:
     font-size: 1.15rem;
     line-height: 1.7;
   }
-  /* Vertically center the photo and bio text as a row (photo on the right) */
+  /* Capitalize the "Selected Publications" heading */
+  .post > article > h2 {
+    text-transform: capitalize;
+  }
+  /* Widen publication entries: shrink the badge column, give the space to the text */
+  @media (min-width: 576px) {
+    .publications .col-sm-2 {
+      flex: 0 0 13%;
+      max-width: 13%;
+    }
+    .publications .col-sm-8 {
+      flex: 0 0 87%;
+      max-width: 87%;
+    }
+  }
+  /* Vertically center the photo and bio text as a row (photo on the right);
+     everything else (publications, socials) stacks full-width below. */
   @media (min-width: 576px) {
     .post > article {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
     }
+    .post > article > * {
+      order: 3;
+      width: 100%;
+    }
     .post > article > .clearfix {
       order: 1;
+      width: auto;
       flex: 1 1 300px;
     }
     .post > article > .profile {
       order: 2;
+      width: auto;
       margin-left: 1.75rem;
-    }
-    .post > article > .social {
-      order: 3;
-      width: 100%;
     }
   }
 </style>
