@@ -69,6 +69,12 @@ latest_posts:
   .publications .abbr .badge > div {
     display: inline;
   }
+  /* Align publication rows with the bio text: Bootstrap's .row has a -15px
+     gutter but our columns have no compensating padding, so it overflows. */
+  .publications ol.bibliography li .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
   /* Compact, standard-size link buttons (Paper, Abs, ...) */
   .publications .links .btn {
     padding: 0.2rem 0.55rem;
