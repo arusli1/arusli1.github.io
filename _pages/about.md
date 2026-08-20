@@ -64,8 +64,15 @@ latest_posts:
   .publications .links .btn {
     padding: 0.2rem 0.55rem;
   }
-  /* Mobile: don't let the venue badge stretch to a full-width bar */
+  /* Mobile tweaks */
   @media (max-width: 575.98px) {
+    /* Stack the photo above the text (no float / no text wrapping around it) */
+    .post > article > .profile {
+      float: none;
+      display: block;
+      margin: 0 auto 1.25rem auto;
+    }
+    /* Don't let the venue badge stretch to a full-width bar */
     .publications .abbr .badge {
       width: auto;
       display: inline-block;
