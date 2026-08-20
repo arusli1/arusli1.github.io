@@ -70,14 +70,26 @@
       display: block;
       margin: 0 auto 1.25rem auto;
     }
-    /* Don't let the venue badge stretch to a full-width bar (override .w-100 !important) */
+    /* Compact venue badge on the left, title taking the rest (like the reference sites) */
+    .publications ol.bibliography li .row {
+      flex-wrap: nowrap;
+      align-items: baseline;
+      column-gap: 0.6rem;
+    }
+    .publications .col.col-sm-2.abbr {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      max-width: none !important;
+      padding: 0 !important;
+      text-align: left;
+    }
     .publications .abbr .badge {
       width: auto !important;
-      display: inline-block;
+      display: inline-block !important;
     }
-    .publications .col-sm-2.abbr {
-      margin-bottom: 0.4rem;
-      text-align: left;
+    .publications [id][class*="col-sm-"] {
+      flex: 1 1 auto !important;
+      max-width: none !important;
     }
   }
   /* Vertically center the photo and bio text as a row (photo on the right);
