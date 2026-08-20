@@ -72,13 +72,14 @@ latest_posts:
       display: block;
       margin: 0 auto 1.25rem auto;
     }
-    /* Don't let the venue badge stretch to a full-width bar */
+    /* Don't let the venue badge stretch to a full-width bar (override .w-100 !important) */
     .publications .abbr .badge {
-      width: auto;
+      width: auto !important;
       display: inline-block;
     }
     .publications .col-sm-2.abbr {
       margin-bottom: 0.4rem;
+      text-align: left;
     }
   }
   /* Vertically center the photo and bio text as a row (photo on the right);
