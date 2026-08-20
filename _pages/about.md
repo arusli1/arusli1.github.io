@@ -72,26 +72,28 @@ latest_posts:
       display: block;
       margin: 0 auto 1.25rem auto;
     }
-    /* Compact venue badge on the left, title taking the rest (like the reference sites) */
+    /* Stack each publication like the reference sites: compact badge on its own
+       line (top), then title/authors/venue below. */
     .publications ol.bibliography li .row {
-      flex-wrap: nowrap;
-      align-items: baseline;
-      column-gap: 0.6rem;
+      display: block;
     }
-    .publications .col.col-sm-2.abbr {
-      flex: 0 0 auto !important;
-      width: auto !important;
-      max-width: none !important;
-      padding: 0 !important;
+    .publications ol.bibliography li .col.col-sm-2.abbr {
+      display: block;
+      width: 100%;
+      max-width: none;
+      padding: 0;
+      margin-bottom: 0.5rem;
       text-align: left;
     }
-    .publications .abbr .badge {
-      width: auto !important;
+    .publications ol.bibliography li .abbr .badge {
       display: inline-block !important;
+      width: auto !important;
     }
-    .publications [id][class*="col-sm-"] {
-      flex: 1 1 auto !important;
-      max-width: none !important;
+    .publications ol.bibliography li [id][class*="col-sm-"] {
+      display: block;
+      width: 100%;
+      max-width: none;
+      padding: 0;
     }
   }
   /* Vertically center the photo and bio text as a row (photo on the right);
