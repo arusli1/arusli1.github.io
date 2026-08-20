@@ -2,7 +2,7 @@
 # Site settings
 # -----------------------------------------------------------------------------
 
-title: Andrew Rusli # the website title (if blank, full name will be used instead)
+title: blank # 'blank' = use your name (bolds first name in the heading; tab title = full name)
 first_name: Andrew
 middle_name:
 last_name: Rusli
