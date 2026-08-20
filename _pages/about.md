@@ -24,3 +24,4 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
+I'm a Computer Science undergraduate at Harvard, with interests in efficient machine learning. I'm currently at NVIDIA working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at AWS Annapurna Labs on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
