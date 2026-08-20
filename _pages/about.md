@@ -38,6 +38,26 @@ latest_posts:
     font-size: 1.15rem;
     line-height: 1.7;
   }
+  /* Vertically center the photo and bio text as a row (photo on the right) */
+  @media (min-width: 576px) {
+    .post > article {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .post > article > .clearfix {
+      order: 1;
+      flex: 1 1 300px;
+    }
+    .post > article > .profile {
+      order: 2;
+      margin-left: 1.75rem;
+    }
+    .post > article > .social {
+      order: 3;
+      width: 100%;
+    }
+  }
 </style>
 
 I am an undergrad at [Harvard](https://www.harvard.edu/) with interests in efficient machine learning and model architectures. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
