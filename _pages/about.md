@@ -60,6 +60,15 @@ latest_posts:
     color: #fff;
     text-decoration: none;
   }
+  /* Compact badge that shrinks to its label (like the reference sites),
+     instead of the w-100 + block <div> stretching it to full width */
+  .publications .abbr .badge {
+    display: inline-block !important;
+    width: auto !important;
+  }
+  .publications .abbr .badge > div {
+    display: inline;
+  }
   /* Compact, standard-size link buttons (Paper, Abs, ...) */
   .publications .links .btn {
     padding: 0.2rem 0.55rem;
