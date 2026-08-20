@@ -64,6 +64,16 @@ latest_posts:
   .publications .links .btn {
     padding: 0.2rem 0.55rem;
   }
+  /* Mobile: don't let the venue badge stretch to a full-width bar */
+  @media (max-width: 575.98px) {
+    .publications .abbr .badge {
+      width: auto;
+      display: inline-block;
+    }
+    .publications .col-sm-2.abbr {
+      margin-bottom: 0.4rem;
+    }
+  }
   /* Vertically center the photo and bio text as a row (photo on the right);
      everything else (publications, socials) stacks full-width below. */
   @media (min-width: 576px) {
