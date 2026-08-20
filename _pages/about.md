@@ -25,6 +25,8 @@ latest_posts:
 ---
 
 <style>
+  /* Homepage-only layout (photo + bio). Publications styling is shared via the include below. */
+
   /* Rounder corners on the profile photo (default theme radius is small) */
   .profile img {
     border-radius: 24px;
@@ -38,80 +40,15 @@ latest_posts:
     font-size: 1.15rem;
     line-height: 1.7;
   }
-  /* Capitalize the "Selected Publications" heading */
-  .post > article > h2 {
-    text-transform: capitalize;
-  }
-  /* Widen publication entries: shrink the badge column, give the space to the text */
-  @media (min-width: 576px) {
-    .publications .col-sm-2 {
-      flex: 0 0 13%;
-      max-width: 13%;
-    }
-    .publications .col-sm-8 {
-      flex: 0 0 87%;
-      max-width: 87%;
-    }
-  }
-  /* Colored venue badges: white text, no link underline */
-  .publications .badge,
-  .publications .badge a,
-  .publications .badge div {
-    color: #fff;
-    text-decoration: none;
-  }
-  /* Compact badge that shrinks to its label (like the reference sites),
-     instead of the w-100 + block <div> stretching it to full width */
-  .publications .abbr .badge {
-    display: inline-block !important;
-    width: auto !important;
-  }
-  .publications .abbr .badge > div {
-    display: inline;
-  }
-  /* Align publication rows with the bio text: Bootstrap's .row has a -15px
-     gutter but our columns have no compensating padding, so it overflows. */
-  .publications ol.bibliography li .row {
-    margin-left: 0;
-    margin-right: 0;
-  }
-  /* Compact, standard-size link buttons (Paper, Abs, ...) */
-  .publications .links .btn {
-    padding: 0.2rem 0.55rem;
-  }
-  /* Mobile tweaks */
+  /* Mobile: stack the photo above the text (no float / no text wrapping around it) */
   @media (max-width: 575.98px) {
-    /* Stack the photo above the text (no float / no text wrapping around it) */
     .post > article > .profile {
       float: none;
       display: block;
       margin: 0 auto 1.25rem auto;
     }
-    /* Stack each publication like the reference sites: compact badge on its own
-       line (top), then title/authors/venue below. */
-    .publications ol.bibliography li .row {
-      display: block;
-    }
-    .publications ol.bibliography li .col.col-sm-2.abbr {
-      display: block;
-      width: 100%;
-      max-width: none;
-      padding: 0;
-      margin-bottom: 0.5rem;
-      text-align: left;
-    }
-    .publications ol.bibliography li .abbr .badge {
-      display: inline-block !important;
-      width: auto !important;
-    }
-    .publications ol.bibliography li [id][class*="col-sm-"] {
-      display: block;
-      width: 100%;
-      max-width: none;
-      padding: 0;
-    }
   }
-  /* Vertically center the photo and bio text as a row (photo on the right);
+  /* Desktop: vertically center the photo and bio text as a row (photo on the right);
      everything else (publications, socials) stacks full-width below. */
   @media (min-width: 576px) {
     .post > article {
@@ -135,5 +72,7 @@ latest_posts:
     }
   }
 </style>
+
+{% include custom-style.html %}
 
 I am an undergrad at [Harvard](https://www.harvard.edu/) with interests in efficient machine learning and model architectures. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).

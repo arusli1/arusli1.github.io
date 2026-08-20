@@ -1,0 +1,70 @@
+<style>
+  /* Shared publications styling — applied on the homepage and the /publications/ page */
+
+  /* Capitalize the "Selected Publications" heading */
+  .post > article > h2 {
+    text-transform: capitalize;
+  }
+  /* Widen publication entries: shrink the badge column, give the space to the text */
+  @media (min-width: 576px) {
+    .publications .col-sm-2 {
+      flex: 0 0 13%;
+      max-width: 13%;
+    }
+    .publications .col-sm-8 {
+      flex: 0 0 87%;
+      max-width: 87%;
+    }
+  }
+  /* Colored venue badges: white text, no link underline */
+  .publications .badge,
+  .publications .badge a,
+  .publications .badge div {
+    color: #fff;
+    text-decoration: none;
+  }
+  /* Compact badge that shrinks to its label (instead of w-100 + block <div> stretching it),
+     with roomy padding like the reference sites so it reads as a comfortable pill. */
+  .publications .abbr .badge {
+    display: inline-block !important;
+    width: auto !important;
+    padding: 0.32rem 0.85rem;
+    font-size: 72%;
+  }
+  .publications .abbr .badge > div {
+    display: inline;
+  }
+  /* Align publication rows with the surrounding text (remove Bootstrap's -15px gutter overflow) */
+  .publications ol.bibliography li .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  /* Compact, standard-size link buttons (Paper, Abs, ...) */
+  .publications .links .btn {
+    padding: 0.2rem 0.55rem;
+  }
+  /* Mobile: stack compact badge on its own line (top), title/authors/venue below */
+  @media (max-width: 575.98px) {
+    .publications ol.bibliography li .row {
+      display: block;
+    }
+    .publications ol.bibliography li .col.col-sm-2.abbr {
+      display: block;
+      width: 100%;
+      max-width: none;
+      padding: 0;
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+    .publications ol.bibliography li .abbr .badge {
+      display: inline-block !important;
+      width: auto !important;
+    }
+    .publications ol.bibliography li [id][class*="col-sm-"] {
+      display: block;
+      width: 100%;
+      max-width: none;
+      padding: 0;
+    }
+  }
+</style>

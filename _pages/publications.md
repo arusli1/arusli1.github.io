@@ -9,6 +9,8 @@ nav_order: 2
 
 <!-- _pages/publications.md -->
 
+{% include custom-style.html %}
+
 <div class="publications">
 
 {% bibliography %}
