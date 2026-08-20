@@ -53,6 +53,17 @@ latest_posts:
       max-width: 87%;
     }
   }
+  /* Colored venue badges: white text, no link underline */
+  .publications .badge,
+  .publications .badge a,
+  .publications .badge div {
+    color: #fff;
+    text-decoration: none;
+  }
+  /* Compact, standard-size link buttons (Paper, Abs, ...) */
+  .publications .links .btn {
+    padding: 0.2rem 0.55rem;
+  }
   /* Vertically center the photo and bio text as a row (photo on the right);
      everything else (publications, socials) stacks full-width below. */
   @media (min-width: 576px) {
