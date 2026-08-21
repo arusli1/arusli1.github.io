@@ -117,7 +117,7 @@ og_image: /assets/img/prof_pic.jpg # The site-wide (default for all links) Open 
 analytics:
   # For Google Analytics, see https://support.google.com/analytics/answer/10447272?hl=en&ref_topic=14088998&sjid=5129943941510317771-SA#zippy=%2Cgoogle-sites
   # and follow the instructions for Google Sites. You will need to create a Google Analytics property and copy the Google tag ID.
-  google: # your Google Analytics measurement ID (format: G-XXXXXXXXXX)
+  google: G-Z2DVD5512M # your Google Analytics measurement ID (format: G-XXXXXXXXXX)
   cronitor: # cronitor RUM analytics site ID (format: XXXXXXXXX)
   pirsch: # your Pirsch analytics site ID (length 32 characters)
   openpanel: # your Openpanel analytics client ID (format: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX)
