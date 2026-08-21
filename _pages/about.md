@@ -75,4 +75,4 @@ latest_posts:
 
 {% include custom-style.html %}
 
-I am an undergrad at [Harvard](https://www.harvard.edu/) with interests in efficient machine learning and model architectures. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
+I am a CS student at [Harvard](https://www.harvard.edu/) with interests in efficient machine learning and model architectures. I'm currently at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and kernels for [Trainium](https://aws.amazon.com/ai/machine-learning/trainium/).
