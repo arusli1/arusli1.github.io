@@ -7,8 +7,7 @@ first_name: Andrew
 middle_name:
 last_name: Rusli
 contact_note: Best by email.
-description: > # the ">" symbol means to ignore newlines until "footer_text:"
-  Personal site of Andrew Rusli, a CS student at Harvard working on efficient machine learning and LLM inference.
+description: "Personal site of Andrew Rusli, a CS student at Harvard working on efficient machine learning and LLM inference." # single line so the auto-generated JSON-LD stays valid
 footer_text: # extra footer text after the copyright line (left blank)
 keywords: Andrew Rusli, Andrew Rusli Harvard, efficient machine learning, TensorRT-LLM, NVIDIA, AWS Trainium, quantization # add your own keywords or leave empty
 lang: en # the language of your site (for example: en, fr, cn, ru, etc.)
