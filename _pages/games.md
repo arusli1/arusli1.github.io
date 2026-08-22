@@ -2,7 +2,7 @@
 layout: page
 permalink: /games/
 title: games
-description: "athena's paths"
+description: "athenian paths"
 nav: true
 nav_order: 1
 ---
@@ -42,13 +42,6 @@ nav_order: 1
   #zippath .zp-btn:hover {
     border-color: var(--dot);
     color: var(--dot);
-  }
-  #zippath .zp-status {
-    font-size: 0.85rem;
-    color: var(--global-text-color-light);
-    margin-bottom: 0.75rem;
-    min-height: 1.2em;
-    text-align: center;
   }
   #zippath .zp-scroll {
     overflow-x: auto;
@@ -157,7 +150,6 @@ nav_order: 1
       <span class="zp-copied" id="zp-copied"></span>
     </div>
   </div>
-  <div class="zp-status" id="zp-status">generating puzzle&hellip;</div>
   <div class="zp-scroll">
     <div class="zp-grid" id="zp-grid"></div>
   </div>
@@ -408,7 +400,6 @@ nav_order: 1
 
   var els = {
     grid: document.getElementById("zp-grid"),
-    status: document.getElementById("zp-status"),
     newBtn: document.getElementById("zp-new"),
     shareBtn: document.getElementById("zp-share"),
     copied: document.getElementById("zp-copied"),
@@ -686,9 +677,9 @@ nav_order: 1
         var cell = cellEls[key(c[0], c[1])];
         if (cell) cell.classList.add("zp-lit");
       });
-      setTimeout(function () {
-        loadPuzzle(randomSeed());
-      }, 550);
+      // stay on the solved board rather than auto-advancing — otherwise the URL
+      // changes to a new puzzle before there's a chance to share the one just solved
+      state.animating = false;
     }, totalFillTime);
   }
 
@@ -699,7 +690,6 @@ nav_order: 1
     state.H = result.H;
     state.playerPath = [result.path[0]];
     state.animating = false;
-    els.status.textContent = "";
     buildBoard();
   }
 
@@ -713,15 +703,10 @@ nav_order: 1
       return;
     }
 
-    els.status.textContent = "generating puzzle…";
-    // defer the search a frame so "generating…" actually paints first
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        var result = generatePuzzle(seed);
-        saveToCache(seed, result);
-        applyPuzzle(result);
-      });
-    });
+    // generation is sub-millisecond, so this runs synchronously — no loading state needed
+    var result = generatePuzzle(seed);
+    saveToCache(seed, result);
+    applyPuzzle(result);
   }
 
   function isAdjacent(a, b) {
