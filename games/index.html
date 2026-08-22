@@ -638,7 +638,7 @@
 
   // --- Global solved counter (Cloudflare Worker + KV) ---
   var COUNTER_URL = "https://paths-counter.arusli1.workers.dev/";
-  var COUNTER_POLL_MS = 3000;
+  var COUNTER_POLL_MS = 1500;
   // captured once so the count appends to whatever the heading actually says,
   // instead of hardcoding "athenian paths" a second time in JS
   var headingBase = els.heading ? els.heading.textContent.trim() : "";
