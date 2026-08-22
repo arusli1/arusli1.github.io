@@ -258,7 +258,7 @@ let transTheme = () => {
 // "system". Default is "system".
 let determineThemeSetting = () => {
   let themeSetting = localStorage.getItem("theme");
-  // 2-state only: default to dark; treat anything that isn't "light" as "dark".
+  // Default to dark; honor an explicit light/dark choice from the toggle.
   if (themeSetting != "dark" && themeSetting != "light") {
     themeSetting = "dark";
   }
