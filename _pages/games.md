@@ -211,6 +211,12 @@ nav_order: 1
   // so a Hamiltonian path always exists by construction — no separate existence search,
   // no backtracking blow-up, no fallback shape ever needed. ---
 
+  // MAX_BOARD_W bounds the walk's own width AND the final width after a forced
+  // tail is grown on (the tail can extend the shape in any direction, including
+  // sideways) — both need to respect it, or a board can end up wider than fits
+  // a phone screen without shrinking cells past comfortable.
+  var MAX_BOARD_W = 9;
+
   // Earlier versions actively avoided the walk touching its own trail, aiming for thin
   // 1-wide corridors on the theory that fewer alternate routes = harder. In practice a
   // thin corridor is mechanically EASY regardless of solution count — there's rarely a
@@ -222,7 +228,7 @@ nav_order: 1
     // both W and H are capped fairly tight — W so the board always fits phone
     // width without horizontal scroll, H so the whole page (nav, heading,
     // controls, board, socials) fits one mobile screen without vertical scroll
-    var W = 7 + Math.floor(rng() * 3);
+    var W = MAX_BOARD_W - 2 + Math.floor(rng() * 3);
     var H = 6 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
@@ -399,7 +405,10 @@ nav_order: 1
         var tail = growForcedTail(candidate.region, endCell, rng, 2 + Math.floor(rng() * 2));
         if (tail) {
           candidate.path = candidate.path.concat(tail);
-          return cropPuzzle(candidate);
+          var withTail = cropPuzzle(candidate);
+          // the tail can grow sideways, pushing width past the phone-fit cap —
+          // only accept if it's still within bounds, otherwise keep searching
+          if (withTail.W <= MAX_BOARD_W) return withTail;
         }
       }
       if (!best || candidate.region.size > best.region.size) best = cropPuzzle(candidate);
