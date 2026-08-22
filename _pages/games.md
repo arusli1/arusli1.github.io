@@ -113,6 +113,16 @@ nav_order: 1
   #zippath .zp-path-svg .zp-pupil {
     transition: cx 0.18s ease-out, cy 0.18s ease-out;
   }
+  /* while actively dragging, the same reveal transition runs much faster —
+     keeps the line/eyes smooth instead of a hard instant snap, without
+     visibly trailing behind a moving finger the way the full 0.18s does */
+  #zippath.zp-dragging .zp-path-svg path {
+    transition-duration: 0.08s;
+  }
+  #zippath.zp-dragging .zp-path-svg .zp-eye,
+  #zippath.zp-dragging .zp-path-svg .zp-pupil {
+    transition-duration: 0.08s;
+  }
   #zippath .zp-path-svg .zp-eye {
     fill: var(--global-bg-color);
   }
@@ -507,6 +517,7 @@ nav_order: 1
   var cellEls = {};
 
   var els = {
+    root: document.getElementById("zippath"),
     grid: document.getElementById("zp-grid"),
     newBtn: document.getElementById("zp-new"),
     shareBtn: document.getElementById("zp-share"),
@@ -929,8 +940,13 @@ nav_order: 1
     return [parseInt(cellEl.dataset.x, 10), parseInt(cellEl.dataset.y, 10)];
   }
 
+  var lastPointerX = 0,
+    lastPointerY = 0;
+
   function handlePointerDown(e) {
     if (state.animating) return;
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
     var cell = cellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
 
@@ -939,6 +955,7 @@ nav_order: 1
       state.playerPath = state.playerPath.slice(0, existingIdx + 1);
       dragging = true;
       renderPath();
+      if (els.root) els.root.classList.add("zp-dragging");
       e.preventDefault();
       return;
     }
@@ -949,36 +966,63 @@ nav_order: 1
       state.playerPath = state.playerPath.concat(run);
       dragging = true;
       renderPath();
+      if (els.root) els.root.classList.add("zp-dragging");
       e.preventDefault();
     }
   }
 
-  function handlePointerMove(e) {
-    if (!dragging || state.animating) return;
-    var cell = cellFromPoint(e.clientX, e.clientY);
-    if (!cell) return;
+  // one step of "does this cell continue/backtrack the path" — pulled out of
+  // handlePointerMove so it can be applied to several interpolated points
+  // along a single fast move, not just the move's final position
+  function tryAdvanceToCell(cell) {
     var head = state.playerPath[state.playerPath.length - 1];
-    if (cell[0] === head[0] && cell[1] === head[1]) return;
+    if (cell[0] === head[0] && cell[1] === head[1]) return false;
 
     if (state.playerPath.length >= 2) {
       var second = state.playerPath[state.playerPath.length - 2];
       if (cell[0] === second[0] && cell[1] === second[1]) {
         state.playerPath.pop();
-        renderPath();
-        return;
+        return true;
       }
     }
 
-    if (!isAdjacent(head, cell)) return;
-    if (!state.region.has(key(cell[0], cell[1]))) return;
-    if (findInPlayerPath(cell[0], cell[1]) !== -1) return;
+    if (!isAdjacent(head, cell)) return false;
+    if (!state.region.has(key(cell[0], cell[1]))) return false;
+    if (findInPlayerPath(cell[0], cell[1]) !== -1) return false;
 
     state.playerPath.push(cell);
-    renderPath();
+    return true;
+  }
+
+  function handlePointerMove(e) {
+    if (!dragging || state.animating) return;
+    var x0 = lastPointerX,
+      y0 = lastPointerY;
+    var x1 = e.clientX,
+      y1 = e.clientY;
+    lastPointerX = x1;
+    lastPointerY = y1;
+
+    // a fast drag can jump several cells between two pointermove events —
+    // sample along the straight line from the last point to this one so a
+    // cell in between never gets silently skipped
+    var dist = Math.hypot(x1 - x0, y1 - y0);
+    var steps = Math.min(40, Math.max(1, Math.ceil(dist / (state.cellSize / 2))));
+    var changed = false;
+    for (var i = 1; i <= steps; i++) {
+      var t = i / steps;
+      var cell = cellFromPoint(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+      if (cell && tryAdvanceToCell(cell)) changed = true;
+    }
+    // still animated (not instant) so the line/eyes stay smooth rather than
+    // hard-snapping — but the .zp-dragging class above shortens that same
+    // transition to 0.08s, so it doesn't visibly trail behind a moving finger
+    if (changed) renderPath();
   }
 
   function handlePointerUp() {
     dragging = false;
+    if (els.root) els.root.classList.remove("zp-dragging");
   }
 
   els.grid.addEventListener("pointerdown", handlePointerDown);
