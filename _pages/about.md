@@ -91,6 +91,7 @@ I'm a CS student at [Harvard](https://www.harvard.edu/) interested in efficient 
   "affiliation": { "@type": "CollegeOrUniversity", "name": "Harvard University" },
   "sameAs": [
     "https://github.com/arusli1",
+    "https://www.instagram.com/and.rawr/",
     "https://www.linkedin.com/in/andrew-rusli",
     "https://scholar.google.com/citations?user=VJGcga0AAAAJ",
     "https://x.com/and_rawr"
