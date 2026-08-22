@@ -323,10 +323,42 @@ nav_order: 1
     return minCov;
   }
 
+  // Degree here is about the FINAL region, not the walk's visit order — a cell
+  // the walk terminates at (no unvisited neighbors left) always has all of its
+  // in-grid neighbors already in the region, so a true degree-1 endpoint isn't
+  // reachable this way (every cell has >=2 grid-neighbors). Degree<=2 is the
+  // achievable version of "narrow" — checking a short run of them leading into
+  // the endpoint is what actually reads as a dead-end nook rather than just an
+  // arbitrary cell that happened to fill last in open space.
+  function degreeOf(puzzle, cell) {
+    var nbrs = [
+      [cell[0] + 1, cell[1]],
+      [cell[0] - 1, cell[1]],
+      [cell[0], cell[1] + 1],
+      [cell[0], cell[1] - 1],
+    ];
+    var d = 0;
+    nbrs.forEach(function (n) {
+      if (puzzle.region.has(key(n[0], n[1]))) d++;
+    });
+    return d;
+  }
+
+  function hasNarrowEnding(puzzle) {
+    var end = puzzle.path[puzzle.path.length - 1];
+    if (degreeOf(puzzle, end) > 2) return false;
+    var tailLen = 0;
+    for (var i = puzzle.path.length - 1; i >= 0 && puzzle.path.length - 1 - i < 4; i--) {
+      if (degreeOf(puzzle, puzzle.path[i]) <= 2) tailLen++;
+      else break;
+    }
+    return tailLen >= 2;
+  }
+
   function generatePuzzle(seed) {
     var rng = mulberry32(seed);
     var best = null;
-    for (var attempts = 0; attempts < 150; attempts++) {
+    for (var attempts = 0; attempts < 1500; attempts++) {
       var walk = attemptWalk(rng);
       if (walk.path.length < 28) continue;
       var candidate = walkToPuzzle(walk);
@@ -334,11 +366,16 @@ nav_order: 1
       // which a plain up-and-down sweep solves regardless of size — genuine holes
       // throughout are what actually defeats a mechanical row-by-row scan
       var coverage = candidate.region.size / (candidate.W * candidate.H);
-      if (avgDegree(candidate) >= 2.6 && coverage <= 0.65 && minBlockCoverage(candidate) >= 0.25) {
-        // vary which end of the walk becomes the displayed start — otherwise the
-        // start is always wherever the walk happened to begin, which trends toward
-        // similar-feeling positions rather than a genuine mix of corners/open spots
-        if (rng() < 0.5) candidate.path = candidate.path.slice().reverse();
+      if (
+        avgDegree(candidate) >= 2.6 &&
+        coverage <= 0.65 &&
+        minBlockCoverage(candidate) >= 0.25 &&
+        hasNarrowEnding(candidate)
+      ) {
+        // the walk's own endpoint is kept as the finish (never reversed to the
+        // start) — that's the whole point of hasNarrowEnding: the last few
+        // moves should visibly funnel into a dead-end nook, not be swappable
+        // with the start
         return candidate;
       }
       if (!best || candidate.region.size > best.region.size) best = candidate;
