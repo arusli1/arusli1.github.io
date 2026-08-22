@@ -231,7 +231,7 @@ nav_order: 1
     // width without horizontal scroll, H so the whole page (nav, heading,
     // controls, board, socials) fits one mobile screen without vertical scroll
     var W = 7 + Math.floor(rng() * 3);
-    var H = 7 + Math.floor(rng() * 3);
+    var H = 6 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
     visited[startId] = 1;
