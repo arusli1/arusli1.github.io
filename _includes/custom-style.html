@@ -1,9 +1,43 @@
 <style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+  /* Font experiment: Inter */
+  body,
+  .post-title,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+  }
+
+  /* --- Blue accent + near-black dark mode (toggle keeps light/dark, starts dark) --- */
+  :root {
+    --global-theme-color: #c8102e; /* light-mode accent (athletic red, like the shirt logo) */
+    --global-hover-color: #c8102e;
+  }
+  html[data-theme="dark"] {
+    --global-bg-color: #0e0e11; /* near-black */
+    --global-text-color: #e6e6e6;
+    --global-text-color-light: #9aa0a6;
+    --global-divider-color: rgba(255, 255, 255, 0.1);
+    --global-theme-color: #6190e5; /* true jersey navy (#18263f), brightened for near-black */
+    --global-hover-color: #6190e5;
+  }
+
   /* Shared publications styling — applied on the homepage and the /publications/ page */
 
-  /* Capitalize the "Selected Publications" heading */
+  /* Section heading case — lowercase to match the site's lowercase nav/aesthetic */
   .post > article > h2 {
-    text-transform: capitalize;
+    text-transform: lowercase;
   }
   /* Widen publication entries: shrink the badge column, give the space to the text */
   @media (min-width: 576px) {
