@@ -1,0 +1,8 @@
+name = "paths-counter"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# id gets filled in after running: npx wrangler kv namespace create COUNTER_KV
+[[kv_namespaces]]
+binding = "COUNTER_KV"
+id = "4677210c98ae43ae93a05f711cae3fae"

@@ -17,6 +17,7 @@ nav_order: 1
     font-size: 1.75rem;
     font-weight: 400;
     color: var(--global-text-color);
+    margin-bottom: 1.25rem;
   }
   #zippath {
     --dot: var(--global-theme-color);
@@ -27,14 +28,22 @@ nav_order: 1
     justify-content: center;
     gap: 0.5rem;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  #zippath .zp-solved-count {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--global-text-color-light);
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+    min-height: 1.2em;
   }
   #zippath .zp-btn {
     font-family: inherit;
     font-size: 0.85rem;
     padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--global-divider-color);
+    border-radius: 2px;
+    border: 1px solid var(--global-text-color);
     background: transparent;
     color: var(--global-text-color);
     cursor: pointer;
@@ -150,6 +159,7 @@ nav_order: 1
       <span class="zp-copied" id="zp-copied"></span>
     </div>
   </div>
+  <div class="zp-solved-count" id="zp-solved-count"></div>
   <div class="zp-scroll">
     <div class="zp-grid" id="zp-grid"></div>
   </div>
@@ -495,6 +505,7 @@ nav_order: 1
     playerPath: [],
     cellSize: CELL_MAX,
     animating: false,
+    solved: false,
   };
 
   var cellEls = {};
@@ -504,7 +515,50 @@ nav_order: 1
     newBtn: document.getElementById("zp-new"),
     shareBtn: document.getElementById("zp-share"),
     copied: document.getElementById("zp-copied"),
+    solvedCount: document.getElementById("zp-solved-count"),
   };
+
+  // --- Global solved counter (Cloudflare Worker + KV) ---
+  var COUNTER_URL = "https://paths-counter.arusli1.workers.dev/";
+  var COUNTER_POLL_MS = 5000;
+
+  function renderSolvedCount(n) {
+    if (!els.solvedCount) return;
+    els.solvedCount.textContent = "athenian paths found: " + n.toLocaleString();
+  }
+
+  // best-effort only — a fun stat, not core functionality, so any network
+  // failure (offline, ad-blocker, worker down) just leaves the text as-is
+  function fetchSolvedCount() {
+    fetch(COUNTER_URL)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (d) {
+        renderSolvedCount(d.count);
+      })
+      .catch(function () {});
+  }
+
+  function incrementSolvedCount() {
+    fetch(COUNTER_URL, { method: "POST" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (d) {
+        renderSolvedCount(d.count);
+      })
+      .catch(function () {});
+  }
+
+  // poll while the tab is actually visible, so a background tab doesn't
+  // burn requests against the free tier for nothing
+  setInterval(function () {
+    if (document.visibilityState === "visible") fetchSolvedCount();
+  }, COUNTER_POLL_MS);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") fetchSolvedCount();
+  });
 
   function seedFromUrl() {
     var params = new URLSearchParams(window.location.search);
@@ -748,6 +802,10 @@ nav_order: 1
 
     if (state.playerPath.length === state.region.size && !state.animating) {
       playWinAnimation();
+      if (!state.solved) {
+        state.solved = true;
+        incrementSolvedCount();
+      }
     }
   }
 
@@ -790,6 +848,7 @@ nav_order: 1
     state.H = result.H;
     state.playerPath = [result.path[0]];
     state.animating = false;
+    state.solved = false;
     buildBoard();
   }
 
@@ -967,5 +1026,6 @@ nav_order: 1
   var initialSeed = seedFromUrl();
   if (initialSeed === null) initialSeed = randomSeed();
   loadPuzzle(initialSeed);
+  fetchSolvedCount();
 })();
 </script>
