@@ -10,7 +10,7 @@
         "description": "Looks like there has been a mistake. Nothing exists here.",
         "headline": "Page not found",
         
-        "sameAs": ["https://github.com/arusli1","https://www.linkedin.com/in/andrew-rusli","https://scholar.google.com/citations?user=VJGcga0AAAAJ","https://twitter.com/and_rawr"],
+        "sameAs": ["https://github.com/arusli1","https://instagram.com/and.rawr","https://www.linkedin.com/in/andrew-rusli","https://scholar.google.com/citations?user=VJGcga0AAAAJ","https://twitter.com/and_rawr"],
         
         "name": "Andrew Rusli",
         "@context": "https://schema.org"
@@ -24,8 +24,9 @@
   </script> </head> <body class="fixed-top-nav "> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Andrew</span> Rusli </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item "> <a class="nav-link" href="/games/">games </a> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">Page not found</h1> <p class="post-description">Looks like there has been a mistake. Nothing exists here.</p> </header> <article> <style>
   @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
-  /* Font experiment: Inter */
-  body,
+  /* Inter on headings/nav only — not body text. Inter renders noticeably wider
+     than the system font stack for some strings, which was tipping long
+     publication titles from fitting on one line into wrapping to two. */
   .post-title,
   h1,
   h2,
