@@ -227,7 +227,10 @@ nav_order: 1
   // so covering it correctly takes actual planning. So: plain unbiased random walk,
   // no corridor-avoidance, no shortcut logic — just let it wander through open space.
   function attemptWalk(rng) {
-    var W = 10 + Math.floor(rng() * 4);
+    // W is capped fairly tight so the board always fits phone width without
+    // horizontal scrolling (H doesn't matter for this — the page itself
+    // scrolls vertically, so extra rows are fine)
+    var W = 7 + Math.floor(rng() * 3);
     var H = 8 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
@@ -387,8 +390,7 @@ nav_order: 1
 
   // --- Rendering ---
 
-  var CELL_MIN = 20,
-    CELL_MAX = 38,
+  var CELL_MAX = 38,
     GAP = 7;
 
   var state = {
@@ -430,7 +432,9 @@ nav_order: 1
   function computeCellSize() {
     var wrapperWidth = els.grid.parentElement.clientWidth || 600;
     var maxByWidth = Math.floor((wrapperWidth - (state.W - 1) * GAP) / state.W);
-    state.cellSize = Math.max(CELL_MIN, Math.min(CELL_MAX, maxByWidth));
+    // always fit the container exactly — no forced minimum, so the board can
+    // never need horizontal scrolling on any screen width
+    state.cellSize = Math.max(1, Math.min(CELL_MAX, maxByWidth));
   }
 
   function pos(x, y) {
