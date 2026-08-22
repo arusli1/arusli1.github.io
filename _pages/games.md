@@ -2,7 +2,7 @@
 layout: page
 permalink: /games/
 title: games
-description: "hamiltonian paths"
+description: "athena's paths"
 nav: true
 nav_order: 1
 ---
