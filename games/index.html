@@ -132,14 +132,13 @@
   #zippath .zp-path-svg .zp-pupil {
     transition: cx 0.18s ease-out, cy 0.18s ease-out;
   }
-  /* while actively dragging, the same reveal transition runs much faster —
-     keeps the line/eyes smooth instead of a hard instant snap, without
-     visibly trailing behind a moving finger the way the full 0.18s does */
+  /* while actively dragging, the line's reveal transition runs much faster —
+     keeps it smooth instead of a hard instant snap, without visibly trailing
+     behind a moving finger the way the full 0.18s does. The eyes stay at
+     their normal (slightly slower) speed — they're decorative, not something
+     that needs to track the finger 1:1, and matching the line's fast speed
+     made them read as twitchy rather than a smooth "look here" */
   #zippath.zp-dragging .zp-path-svg path {
-    transition-duration: 0.08s;
-  }
-  #zippath.zp-dragging .zp-path-svg .zp-eye,
-  #zippath.zp-dragging .zp-path-svg .zp-pupil {
     transition-duration: 0.08s;
   }
   #zippath .zp-path-svg .zp-eye {
