@@ -30,14 +30,6 @@ nav_order: 1
     align-items: center;
     margin-bottom: 1.5rem;
   }
-  #zippath .zp-solved-count {
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--global-text-color-light);
-    margin-top: -1rem;
-    margin-bottom: 1.5rem;
-    min-height: 1.2em;
-  }
   #zippath .zp-btn {
     font-family: inherit;
     font-size: 0.85rem;
@@ -159,7 +151,6 @@ nav_order: 1
       <span class="zp-copied" id="zp-copied"></span>
     </div>
   </div>
-  <div class="zp-solved-count" id="zp-solved-count"></div>
   <div class="zp-scroll">
     <div class="zp-grid" id="zp-grid"></div>
   </div>
@@ -515,16 +506,19 @@ nav_order: 1
     newBtn: document.getElementById("zp-new"),
     shareBtn: document.getElementById("zp-share"),
     copied: document.getElementById("zp-copied"),
-    solvedCount: document.getElementById("zp-solved-count"),
+    heading: document.querySelector(".post-header .post-description"),
   };
 
   // --- Global solved counter (Cloudflare Worker + KV) ---
   var COUNTER_URL = "https://paths-counter.arusli1.workers.dev/";
   var COUNTER_POLL_MS = 5000;
+  // captured once so the count appends to whatever the heading actually says,
+  // instead of hardcoding "athenian paths" a second time in JS
+  var headingBase = els.heading ? els.heading.textContent.trim() : "";
 
   function renderSolvedCount(n) {
-    if (!els.solvedCount) return;
-    els.solvedCount.textContent = "athenian paths found: " + n.toLocaleString();
+    if (!els.heading) return;
+    els.heading.textContent = headingBase + " found: " + n.toLocaleString();
   }
 
   // best-effort only — a fun stat, not core functionality, so any network
