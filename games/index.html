@@ -349,24 +349,34 @@
     return { path: path, W: W, H: H };
   }
 
-  // crop to the shape's actual occupied extent — the walk's bounding box can include
-  // empty rows/columns it never reached, which otherwise renders as dead space
+  // convert the walk's ids to x,y — no cropping yet, since a forced-ending
+  // tail (grown below) can extend past the walk's own bounding box
   function walkToPuzzle(walk) {
     var W = walk.W;
     var xyPath = walk.path.map(function (id) {
       return idToXY(id, W);
     });
+    var region = new Set();
+    xyPath.forEach(function (xy) {
+      region.add(key(xy[0], xy[1]));
+    });
+    return { region: region, path: xyPath, W: W, H: walk.H };
+  }
+
+  // crop to the shape's actual occupied extent — the bounding box can include
+  // empty rows/columns nothing ever reached, which otherwise renders as dead space
+  function cropPuzzle(puzzle) {
     var minX = Infinity,
       maxX = -Infinity,
       minY = Infinity,
       maxY = -Infinity;
-    xyPath.forEach(function (xy) {
+    puzzle.path.forEach(function (xy) {
       if (xy[0] < minX) minX = xy[0];
       if (xy[0] > maxX) maxX = xy[0];
       if (xy[1] < minY) minY = xy[1];
       if (xy[1] > maxY) maxY = xy[1];
     });
-    var path = xyPath.map(function (xy) {
+    var path = puzzle.path.map(function (xy) {
       return [xy[0] - minX, xy[1] - minY];
     });
     var region = new Set();
@@ -429,42 +439,60 @@
     return minCov;
   }
 
-  // Degree here is about the FINAL region, not the walk's visit order — a cell
-  // the walk terminates at (no unvisited neighbors left) always has all of its
-  // in-grid neighbors already in the region, so a true degree-1 endpoint isn't
-  // reachable this way (every cell has >=2 grid-neighbors). Degree<=2 is the
-  // achievable version of "narrow" — checking a short run of them leading into
-  // the endpoint is what actually reads as a dead-end nook rather than just an
-  // arbitrary cell that happened to fill last in open space.
-  function degreeOf(puzzle, cell) {
-    var nbrs = [
-      [cell[0] + 1, cell[1]],
-      [cell[0] - 1, cell[1]],
-      [cell[0], cell[1] + 1],
-      [cell[0], cell[1] - 1],
-    ];
-    var d = 0;
-    nbrs.forEach(function (n) {
-      if (puzzle.region.has(key(n[0], n[1]))) d++;
-    });
-    return d;
-  }
-
-  function hasNarrowEnding(puzzle) {
-    var end = puzzle.path[puzzle.path.length - 1];
-    if (degreeOf(puzzle, end) > 2) return false;
-    var tailLen = 0;
-    for (var i = puzzle.path.length - 1; i >= 0 && puzzle.path.length - 1 - i < 4; i--) {
-      if (degreeOf(puzzle, puzzle.path[i]) <= 2) tailLen++;
-      else break;
+  // A cell with exactly one open neighbor can ONLY ever be a path endpoint —
+  // that's a hard constraint on every possible solution, not just the one we
+  // generated (unlike checking degree on wherever the walk happened to stop,
+  // which only describes our own reference path, not what the player can do).
+  // The walk itself can never naturally land on such a cell — its landing
+  // spot always has every one of its in-grid neighbors already visited, so
+  // its degree is however many neighbor positions the grid gives it (always
+  // >=2). To get a real degree-1 cell we grow one on purpose: starting from
+  // the walk's own last cell, extend 1-wide into space outside the walk's
+  // box, where the new cells genuinely don't touch anything but their own
+  // chain. This can only work if that last cell has a free direction to
+  // extend into (an interior endpoint has none) — when it doesn't, this
+  // candidate is skipped and generation just tries another walk.
+  function growForcedTail(region, endCell, rng, tailLen) {
+    function neighborsXY(x, y) {
+      return [
+        [x + 1, y],
+        [x - 1, y],
+        [x, y + 1],
+        [x, y - 1],
+      ];
     }
-    return tailLen >= 2;
+    var tail = [];
+    var prev = endCell;
+    var freeDirs = neighborsXY(endCell[0], endCell[1]).filter(function (n) {
+      return !region.has(key(n[0], n[1]));
+    });
+    if (freeDirs.length === 0) return null;
+    shuffle(freeDirs, rng);
+    var cur = freeDirs[0];
+
+    for (var i = 0; i < tailLen; i++) {
+      var ok = true;
+      neighborsXY(cur[0], cur[1]).forEach(function (n) {
+        if (!(n[0] === prev[0] && n[1] === prev[1]) && region.has(key(n[0], n[1]))) ok = false;
+      });
+      if (!ok) break;
+      tail.push(cur);
+      region.add(key(cur[0], cur[1]));
+      var nbrs = neighborsXY(cur[0], cur[1]).filter(function (n) {
+        return !(n[0] === prev[0] && n[1] === prev[1]) && !region.has(key(n[0], n[1]));
+      });
+      if (nbrs.length === 0) break;
+      shuffle(nbrs, rng);
+      prev = cur;
+      cur = nbrs[0];
+    }
+    return tail.length >= 2 ? tail : null;
   }
 
   function generatePuzzle(seed) {
     var rng = mulberry32(seed);
     var best = null;
-    for (var attempts = 0; attempts < 1500; attempts++) {
+    for (var attempts = 0; attempts < 600; attempts++) {
       var walk = attemptWalk(rng);
       if (walk.path.length < 28) continue;
       var candidate = walkToPuzzle(walk);
@@ -472,21 +500,17 @@
       // which a plain up-and-down sweep solves regardless of size — genuine holes
       // throughout are what actually defeats a mechanical row-by-row scan
       var coverage = candidate.region.size / (candidate.W * candidate.H);
-      if (
-        avgDegree(candidate) >= 2.6 &&
-        coverage <= 0.65 &&
-        minBlockCoverage(candidate) >= 0.25 &&
-        hasNarrowEnding(candidate)
-      ) {
-        // the walk's own endpoint is kept as the finish (never reversed to the
-        // start) — that's the whole point of hasNarrowEnding: the last few
-        // moves should visibly funnel into a dead-end nook, not be swappable
-        // with the start
-        return candidate;
+      if (avgDegree(candidate) >= 2.6 && coverage <= 0.65 && minBlockCoverage(candidate) >= 0.25) {
+        var endCell = candidate.path[candidate.path.length - 1];
+        var tail = growForcedTail(candidate.region, endCell, rng, 2 + Math.floor(rng() * 2));
+        if (tail) {
+          candidate.path = candidate.path.concat(tail);
+          return cropPuzzle(candidate);
+        }
       }
-      if (!best || candidate.region.size > best.region.size) best = candidate;
+      if (!best || candidate.region.size > best.region.size) best = cropPuzzle(candidate);
     }
-    if (rng() < 0.5) best.path = best.path.slice().reverse();
+    if (best && rng() < 0.5) best.path = best.path.slice().reverse();
     return best;
   }
 
