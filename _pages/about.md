@@ -75,12 +75,22 @@ latest_posts:
       width: auto;
       margin-left: 1.75rem;
     }
+    /* Match the gap above "selected publications" to the gap below it
+       (measured: 26px above vs 40px below without this; flex items don't
+       collapse margins, so this adds only the 14px difference) */
+    .post > article > h2 {
+      margin-top: 0.875rem;
+    }
   }
 </style>
 
 {% include custom-style.html %}
 
-I'm a CS student at [Harvard](https://www.harvard.edu/) interested in efficient machine learning and model architectures. I'm an intern at [NVIDIA](https://www.nvidia.com/en-us/) working on inference optimization for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM), and previously worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and [kernels](https://github.com/aws-neuron/nki-library) for Trainium.
+I'm a CS student at [Harvard](https://www.harvard.edu/) interested in efficient machine learning, model architectures, and continual learning.
+
+Currently, I'm an intern at [NVIDIA](https://www.nvidia.com/en-us/) working on GPU inference optimizations for [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM). Previously, I worked at [AWS Annapurna Labs](https://www.amazon.jobs/content/en/teams/annapurna-labs) on quantization and [kernels](https://github.com/aws-neuron/nki-library) for Trainium.
+
+Before that: [USAPhO Silver](https://aapt.org/physicsteam/PT-landing.cfm), [USNCO High Honors](https://www.acs.org/education/olympiad.html), [MCM Finalist](https://www.comap.org/contests/mcm-icm), [4x&nbsp;AIME](https://maa.org/maa-invitational-competitions/), [Summer Science Program](https://summerscience.org/).
 
 <script type="application/ld+json">
 {
