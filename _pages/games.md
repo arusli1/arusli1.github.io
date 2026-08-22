@@ -59,6 +59,11 @@ nav_order: 1
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    /* touch-action: none alone doesn't reliably stop iOS Safari's
+       press-and-hold callout menu — pausing mid-drag at a decision point
+       could trigger it and cancel the touch. This is the property that
+       actually suppresses that. */
+    -webkit-touch-callout: none;
   }
   #zippath .zp-cell.zp-lit {
     animation: zp-cell-glow 0.5s ease-in-out;
