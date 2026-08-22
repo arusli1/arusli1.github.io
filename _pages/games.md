@@ -456,9 +456,7 @@ nav_order: 1
     GAP = 7;
 
   var state = {
-    seed: null,
     region: null,
-    path: null,
     W: 0,
     H: 0,
     playerPath: [],
@@ -755,7 +753,6 @@ nav_order: 1
 
   function applyPuzzle(result) {
     state.region = result.region;
-    state.path = result.path;
     state.W = result.W;
     state.H = result.H;
     state.playerPath = [result.path[0]];
@@ -764,7 +761,6 @@ nav_order: 1
   }
 
   function loadPuzzle(seed) {
-    state.seed = seed;
     setUrlSeed(seed);
 
     var cached = loadFromCache(seed);
