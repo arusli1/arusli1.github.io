@@ -1,4 +1,4 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta name="google-site-verification" content="MHcVUpKwBuEJEKCOCH6SRQjW7exoz0AOTwsUhbtTqGU"> <meta http-equiv="Permissions-Policy" content="interest-cohort=()"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> games | Andrew Rusli </title> <meta name="author" content="Andrew Rusli"> <meta name="description" content="hamiltonian paths"> <meta name="keywords" content="Andrew Rusli, Andrew Rusli Harvard, efficient machine learning, TensorRT-LLM, NVIDIA, AWS Trainium, quantization"> <meta property="og:site_name" content="Andrew Rusli"> <meta property="og:type" content="website"> <meta property="og:title" content="Andrew Rusli | games"> <meta property="og:url" content="https://arusli1.github.io/games/"> <meta property="og:description" content="hamiltonian paths"> <meta property="og:image" content="https://arusli1.github.io/assets/img/prof_pic.jpg"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="games"> <meta name="twitter:description" content="hamiltonian paths"> <meta name="twitter:image" content="https://arusli1.github.io/assets/img/prof_pic.jpg"> <script type="application/ld+json">
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta name="google-site-verification" content="MHcVUpKwBuEJEKCOCH6SRQjW7exoz0AOTwsUhbtTqGU"> <meta http-equiv="Permissions-Policy" content="interest-cohort=()"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> games | Andrew Rusli </title> <meta name="author" content="Andrew Rusli"> <meta name="description" content="hamiltonian paths"> <meta name="keywords" content="Andrew Rusli, Andrew Rusli Harvard, efficient machine learning, TensorRT-LLM, NVIDIA, AWS Trainium, quantization"> <meta property="og:site_name" content="Andrew Rusli"> <meta property="og:type" content="website"> <meta property="og:title" content="Andrew Rusli | games"> <meta property="og:url" content="https://arusli1.github.io/games/"> <meta property="og:description" content="hamiltonian paths"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="games"> <meta name="twitter:description" content="hamiltonian paths"> <script type="application/ld+json">
     {
         "author":
         {
@@ -332,7 +332,10 @@
   // so covering it correctly takes actual planning. So: plain unbiased random walk,
   // no corridor-avoidance, no shortcut logic — just let it wander through open space.
   function attemptWalk(rng) {
-    var W = 10 + Math.floor(rng() * 4);
+    // W is capped fairly tight so the board always fits phone width without
+    // horizontal scrolling (H doesn't matter for this — the page itself
+    // scrolls vertically, so extra rows are fine)
+    var W = 7 + Math.floor(rng() * 3);
     var H = 8 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
@@ -492,8 +495,7 @@
 
   // --- Rendering ---
 
-  var CELL_MIN = 20,
-    CELL_MAX = 38,
+  var CELL_MAX = 38,
     GAP = 7;
 
   var state = {
@@ -535,7 +537,9 @@
   function computeCellSize() {
     var wrapperWidth = els.grid.parentElement.clientWidth || 600;
     var maxByWidth = Math.floor((wrapperWidth - (state.W - 1) * GAP) / state.W);
-    state.cellSize = Math.max(CELL_MIN, Math.min(CELL_MAX, maxByWidth));
+    // always fit the container exactly — no forced minimum, so the board can
+    // never need horizontal scrolling on any screen width
+    state.cellSize = Math.max(1, Math.min(CELL_MAX, maxByWidth));
   }
 
   function pos(x, y) {
