@@ -317,11 +317,12 @@
   // so a Hamiltonian path always exists by construction — no separate existence search,
   // no backtracking blow-up, no fallback shape ever needed. ---
 
-  // MAX_BOARD_W bounds the walk's own width AND the final width after a forced
-  // tail is grown on (the tail can extend the shape in any direction, including
-  // sideways) — both need to respect it, or a board can end up wider than fits
-  // a phone screen without shrinking cells past comfortable.
+  // MAX_BOARD_W/H bound the walk's own size AND the final size after a forced
+  // tail is grown on (the tail can extend the shape in any direction) — both
+  // need to respect these, or a board can end up too wide to fit phone width,
+  // or tall enough to force vertical scrolling (11+ rows is where that starts).
   var MAX_BOARD_W = 9;
+  var MAX_BOARD_H = 10;
 
   // Earlier versions actively avoided the walk touching its own trail, aiming for thin
   // 1-wide corridors on the theory that fewer alternate routes = harder. In practice a
@@ -335,7 +336,7 @@
     // width without horizontal scroll, H so the whole page (nav, heading,
     // controls, board, socials) fits one mobile screen without vertical scroll
     var W = MAX_BOARD_W - 2 + Math.floor(rng() * 3);
-    var H = 6 + Math.floor(rng() * 3);
+    var H = MAX_BOARD_H - 4 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
     visited[startId] = 1;
@@ -512,9 +513,10 @@
         if (tail) {
           candidate.path = candidate.path.concat(tail);
           var withTail = cropPuzzle(candidate);
-          // the tail can grow sideways, pushing width past the phone-fit cap —
-          // only accept if it's still within bounds, otherwise keep searching
-          if (withTail.W <= MAX_BOARD_W) return withTail;
+          // the tail can grow in any direction, pushing width or height past
+          // the phone-fit caps — only accept if still within bounds, otherwise
+          // keep searching
+          if (withTail.W <= MAX_BOARD_W && withTail.H <= MAX_BOARD_H) return withTail;
         }
       }
       if (!best || candidate.region.size > best.region.size) best = cropPuzzle(candidate);
