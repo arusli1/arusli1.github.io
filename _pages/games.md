@@ -227,11 +227,11 @@ nav_order: 1
   // so covering it correctly takes actual planning. So: plain unbiased random walk,
   // no corridor-avoidance, no shortcut logic — just let it wander through open space.
   function attemptWalk(rng) {
-    // W is capped fairly tight so the board always fits phone width without
-    // horizontal scrolling (H doesn't matter for this — the page itself
-    // scrolls vertically, so extra rows are fine)
+    // both W and H are capped fairly tight — W so the board always fits phone
+    // width without horizontal scroll, H so the whole page (nav, heading,
+    // controls, board, socials) fits one mobile screen without vertical scroll
     var W = 7 + Math.floor(rng() * 3);
-    var H = 8 + Math.floor(rng() * 3);
+    var H = 7 + Math.floor(rng() * 3);
     var visited = new Uint8Array(W * H);
     var startId = Math.floor(rng() * W) + Math.floor(rng() * H) * W;
     visited[startId] = 1;
