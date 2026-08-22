@@ -32,6 +32,11 @@
     font-weight: 400;
     color: var(--global-text-color);
     margin-bottom: 1.25rem;
+    transition: color 0.6s ease;
+  }
+  .post-header .post-description.zp-count-pulse {
+    color: var(--global-theme-color);
+    transition: color 0s;
   }
   #zippath {
     --dot: var(--global-theme-color);
@@ -618,14 +623,28 @@
 
   // --- Global solved counter (Cloudflare Worker + KV) ---
   var COUNTER_URL = "https://paths-counter.arusli1.workers.dev/";
-  var COUNTER_POLL_MS = 5000;
+  var COUNTER_POLL_MS = 3000;
   // captured once so the count appends to whatever the heading actually says,
   // instead of hardcoding "athenian paths" a second time in JS
   var headingBase = els.heading ? els.heading.textContent.trim() : "";
+  var lastSolvedCount = null;
 
   function renderSolvedCount(n) {
     if (!els.heading) return;
+    var changed = lastSolvedCount !== null && n !== lastSolvedCount;
+    lastSolvedCount = n;
     els.heading.textContent = headingBase + " found: " + n.toLocaleString();
+    // brief color flash on an actual change (not on first load) — makes a
+    // background poll picking up someone else's solve feel noticed, not just
+    // silently different next time you glance at it
+    if (changed) {
+      els.heading.classList.remove("zp-count-pulse");
+      void els.heading.offsetWidth; // restart the transition even if it's still mid-fade
+      els.heading.classList.add("zp-count-pulse");
+      setTimeout(function () {
+        els.heading.classList.remove("zp-count-pulse");
+      }, 50);
+    }
   }
 
   // best-effort only — a fun stat, not core functionality, so any network
