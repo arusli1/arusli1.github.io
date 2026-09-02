@@ -12,16 +12,17 @@
  * --color-accent -> bg-accent / text-accent, --radius-base -> rounded-base.
  */
 @theme {
-  /* Colors: exactly these five, each with one role */
-  --color-paper: #ffffff;  /* page background */
-  --color-ink: #111111;    /* primary text */
-  --color-accent: #cc3300; /* interactive / emphasis */
-  --color-muted: #767676;  /* secondary text */
-  --color-line: #e2e2e2;   /* borders, dividers */
+  /* Colors: exactly these five, each with one role. Inverted palette. */
+  --color-paper: #000000;  /* page background */
+  --color-ink: #eeeeee;    /* primary text */
+  --color-accent: #33ccff; /* interactive / emphasis */
+  --color-muted: #898989;  /* secondary text */
+  --color-line: #1d1d1d;   /* borders, dividers */
 
-  /* Typefaces: two roles only */
+  /* Typefaces: three roles */
   --font-display: ui-serif, Georgia, serif;          /* headings */
   --font-body: ui-sans-serif, system-ui, sans-serif; /* body copy */
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace; /* intro/caption text */
 
   /* Type scale: rem, each paired with a line-height */
   --text-sm: 0.875rem;
@@ -39,5 +40,5 @@
   --spacing: 0.5rem;
 
   /* Radius: one value, used everywhere something is rounded (rounded-base) */
-  --radius-base: 0.5rem;
+  --radius-base: 0.25rem;
 }

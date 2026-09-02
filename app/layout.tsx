@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SocialBar } from "@/components/SocialBar";
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Personal Website",
@@ -8,8 +15,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full">
-      <body className="min-h-full bg-paper text-ink font-body antialiased">
+    <html lang="en" className={geistMono.variable}>
+      <body className="min-h-screen bg-paper text-ink font-body antialiased">
+        <SocialBar />
         {children}
       </body>
     </html>
