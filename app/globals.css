@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — single source of truth.
+ * Design tokens. Single source of truth.
  * Every color, font, size, and spacing value used anywhere in this
  * project must trace back to a variable defined below. These are
- * placeholders — replace with real values before building any UI.
+ * placeholders. Replace with real values before building any UI.
  *
  * Defining them inside @theme (Tailwind v4's CSS-first config) both
  * declares the tokens as real CSS variables AND generates matching
@@ -12,18 +12,18 @@
  * --color-accent -> bg-accent / text-accent, --radius-base -> rounded-base.
  */
 @theme {
-  /* Colors — exactly these five, each with one role */
+  /* Colors: exactly these five, each with one role */
   --color-paper: #ffffff;  /* page background */
   --color-ink: #111111;    /* primary text */
   --color-accent: #cc3300; /* interactive / emphasis */
   --color-muted: #767676;  /* secondary text */
   --color-line: #e2e2e2;   /* borders, dividers */
 
-  /* Typefaces — two roles only */
+  /* Typefaces: two roles only */
   --font-display: ui-serif, Georgia, serif;          /* headings */
   --font-body: ui-sans-serif, system-ui, sans-serif; /* body copy */
 
-  /* Type scale — rem, each paired with a line-height */
+  /* Type scale: rem, each paired with a line-height */
   --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
   --text-base: 1rem;
@@ -35,9 +35,9 @@
   --text-2xl: 2.5rem;
   --text-2xl--line-height: 1.15;
 
-  /* Spacing unit — drives every Tailwind spacing utility (p-*, gap-*, m-*...) */
+  /* Spacing unit: drives every Tailwind spacing utility (p-*, gap-*, m-*...) */
   --spacing: 0.5rem;
 
-  /* Radius — one value, used everywhere something is rounded (rounded-base) */
+  /* Radius: one value, used everywhere something is rounded (rounded-base) */
   --radius-base: 0.5rem;
 }
