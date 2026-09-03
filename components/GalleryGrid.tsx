@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useRevealGlitch } from "@/components/useRevealGlitch";
 import { SKETCH_ELEMENTS, type SketchElement } from "@/components/sketchElements";
 import { GAP_HOTSPOTS } from "@/components/gapHotspots";
@@ -333,72 +333,99 @@ function HoverPatch({ sketch, clip }: { sketch: Sketch; clip: string }) {
   );
 }
 
-function GalleryImage({ sketch, revealing }: { sketch: Sketch; revealing: boolean }) {
-  const elements = useMemo(() => elementsFor(sketch), [sketch]);
-  const [hoverPatches, setHoverPatches] = useState<{ id: number; clip: string }[]>([]);
+// two overlapping images each get their own hover trigger driven by the row
+// (see GalleryRow) instead of their own onMouseMove, so a cursor over the
+// overlapping region activates both, not just whichever one is stacked on top
+export type GalleryImageHandle = { triggerHoverAt: (clientX: number, clientY: number) => void };
+
+const GalleryImage = forwardRef<GalleryImageHandle, { sketch: Sketch; revealing: boolean }>(
+  function GalleryImage({ sketch, revealing }, ref) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const elements = useMemo(() => elementsFor(sketch), [sketch]);
+    const [hoverPatches, setHoverPatches] = useState<{ id: number; clip: string }[]>([]);
+    const nextId = useRef(0);
+
+    // rolled once per reveal burst, not once per render — otherwise these
+    // would reshuffle on every unrelated re-render while still revealing.
+    // Every known low-density gap gets a bias slot (varied shard/n-gon shape,
+    // not a fixed static one), topped up with fully random ones for texture.
+    const genericClips = useMemo(() => {
+      if (!revealing) return [];
+      const hotspots = GAP_HOTSPOTS[keyFor(sketch.src)] ?? [];
+      const count = Math.max(MATERIALIZE_GENERIC_COUNT_MIN, Math.round(elements.length * MATERIALIZE_GENERIC_RATIO));
+      const clips = hotspots.map(([hx, hy]) => genericClip(hx, hy));
+      for (let i = clips.length; i < count; i++) clips.push(genericClip());
+      return clips;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [revealing, elements, sketch.src]);
+
+    useImperativeHandle(ref, () => ({
+      triggerHoverAt(clientX: number, clientY: number) {
+        const el = containerRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+        const px = ((clientX - rect.left) / rect.width) * 100;
+        const py = ((clientY - rect.top) / rect.height) * 100;
+
+        // usually the real object under/near the cursor, but sometimes a
+        // fresh generic shard/n-gon even when one's right there — otherwise,
+        // now that most of a sketch has a real element nearby, hover would
+        // always render the exact same static shape at a given spot instead
+        // of ever varying
+        const hit = Math.random() < HOVER_GENERIC_CHANCE ? null : nearestElement(elements, px, py);
+        const clip = hit ? polygonClip(hit.points) : genericClip(px, py);
+
+        const id = nextId.current++;
+        setHoverPatches((prev) => [...prev, { id, clip }]);
+        setTimeout(() => {
+          setHoverPatches((prev) => prev.filter((p) => p.id !== id));
+        }, HOVER_PATCH_LIFETIME);
+      },
+    }));
+
+    return (
+      <div ref={containerRef} className="relative h-full w-full overflow-hidden">
+        {/* always-correct steady base — the materialize/hover layers animate on top */}
+        <SketchImg
+          sketch={sketch}
+          className="reveal-img pointer-events-none h-full w-full select-none object-contain"
+        />
+        {revealing &&
+          elements.map((el) => (
+            <MaterializeElement key={el.label} sketch={sketch} clip={polygonClip(el.points)} />
+          ))}
+        {genericClips.map((clip, i) => (
+          <MaterializeElement key={`generic-${i}`} sketch={sketch} clip={clip} />
+        ))}
+        {hoverPatches.map((p) => (
+          <HoverPatch key={p.id} sketch={sketch} clip={p.clip} />
+        ))}
+      </div>
+    );
+  },
+);
+
+function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topIndex: number }) {
+  const { ref, revealing } = useRevealGlitch(MATERIALIZE_REVEAL_MS);
+  const imageRefs = useRef<(GalleryImageHandle | null)[]>([]);
   const lastTrigger = useRef(0);
-  const nextId = useRef(0);
 
-  // rolled once per reveal burst, not once per render — otherwise these
-  // would reshuffle on every unrelated re-render while still revealing.
-  // Every known low-density gap gets a bias slot (varied shard/n-gon shape,
-  // not a fixed static one), topped up with fully random ones for texture.
-  const genericClips = useMemo(() => {
-    if (!revealing) return [];
-    const hotspots = GAP_HOTSPOTS[keyFor(sketch.src)] ?? [];
-    const count = Math.max(MATERIALIZE_GENERIC_COUNT_MIN, Math.round(elements.length * MATERIALIZE_GENERIC_RATIO));
-    const clips = hotspots.map(([hx, hy]) => genericClip(hx, hy));
-    for (let i = clips.length; i < count; i++) clips.push(genericClip());
-    return clips;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealing, elements, sketch.src]);
-
+  // driven from the row, not each image's own onMouseMove — the two images
+  // overlap (negative margin below), and a native per-image listener only
+  // ever fires on whichever one is stacked on top at that pixel. Forwarding
+  // the same point to every image lets both react in the overlap region.
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const now = performance.now();
     if (now - lastTrigger.current < HOVER_TRIGGER_INTERVAL) return;
     lastTrigger.current = now;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const px = ((e.clientX - rect.left) / rect.width) * 100;
-    const py = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // usually the real object under/near the cursor, but sometimes a fresh
-    // generic shard/n-gon even when one's right there — otherwise, now that
-    // most of a sketch has a real element nearby, hover would always render
-    // the exact same static shape at a given spot instead of ever varying
-    const hit = Math.random() < HOVER_GENERIC_CHANCE ? null : nearestElement(elements, px, py);
-    const clip = hit ? polygonClip(hit.points) : genericClip(px, py);
-
-    const id = nextId.current++;
-    setHoverPatches((prev) => [...prev, { id, clip }]);
-    setTimeout(() => {
-      setHoverPatches((prev) => prev.filter((p) => p.id !== id));
-    }, HOVER_PATCH_LIFETIME);
+    for (const handle of imageRefs.current) {
+      handle?.triggerHoverAt(e.clientX, e.clientY);
+    }
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden" onMouseMove={handleMouseMove}>
-      {/* always-correct steady base — the materialize/hover layers animate on top */}
-      <SketchImg sketch={sketch} className="reveal-img pointer-events-none h-full w-full select-none object-contain" />
-      {revealing &&
-        elements.map((el) => (
-          <MaterializeElement key={el.label} sketch={sketch} clip={polygonClip(el.points)} />
-        ))}
-      {genericClips.map((clip, i) => (
-        <MaterializeElement key={`generic-${i}`} sketch={sketch} clip={clip} />
-      ))}
-      {hoverPatches.map((p) => (
-        <HoverPatch key={p.id} sketch={sketch} clip={p.clip} />
-      ))}
-    </div>
-  );
-}
-
-function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topIndex: number }) {
-  const { ref, revealing } = useRevealGlitch(MATERIALIZE_REVEAL_MS);
-
-  return (
-    <div ref={ref} className="mx-auto flex max-w-5xl px-6">
+    <div ref={ref} className="mx-auto flex max-w-5xl px-6" onMouseMove={handleMouseMove}>
       {row.map((sketch, idx) => (
         <div
           key={sketch.src}
@@ -409,7 +436,13 @@ function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topInd
           }}
           className="relative block flex-1 select-none"
         >
-          <GalleryImage sketch={sketch} revealing={revealing} />
+          <GalleryImage
+            ref={(handle) => {
+              imageRefs.current[idx] = handle;
+            }}
+            sketch={sketch}
+            revealing={revealing}
+          />
         </div>
       ))}
     </div>
