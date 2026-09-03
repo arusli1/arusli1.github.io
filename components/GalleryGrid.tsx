@@ -194,6 +194,7 @@ function SketchImg({
       src={sketch.src}
       alt=""
       loading="lazy"
+      decoding="async"
       draggable={false}
       className={className}
       style={
@@ -314,6 +315,8 @@ function MaterializeElement({ sketch, clip }: { sketch: Sketch; clip: string }) 
         ref={flashRef}
         src={sketch.src}
         alt=""
+        loading="lazy"
+        decoding="async"
         draggable={false}
         className="pointer-events-none h-full w-full select-none object-contain"
         style={{ transform: `translateY(${sketch.nudgeUp})`, opacity: 0 }}

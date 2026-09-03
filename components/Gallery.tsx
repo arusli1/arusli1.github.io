@@ -26,7 +26,7 @@ const ROWS = [
 
 function getSketches(): Sketch[] {
   const files = readdirSync(SKETCHES_DIR)
-    .filter((f) => f.endsWith(".png"))
+    .filter((f) => f.endsWith(".webp"))
     .sort();
   return files.map((f, i) => ({
     src: `/sketches/transparent/${f}`,
