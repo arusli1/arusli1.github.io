@@ -7,6 +7,13 @@ import { GAP_HOTSPOTS } from "@/components/gapHotspots";
 
 export type Sketch = { src: string; nudgeUp: string; brightness: string };
 
+// all 4 sketches share this exact pixel size — passed as width/height
+// attributes (not just CSS) so the browser knows the aspect ratio before the
+// image has loaded, instead of briefly rendering a small broken-image-sized
+// placeholder box while it resolves
+const SKETCH_INTRINSIC_WIDTH = 1200;
+const SKETCH_INTRINSIC_HEIGHT = 1607;
+
 // overlap between the two images in each row, as a % of row width
 const ROW_GAPS = ["-12%", "-15%"];
 
@@ -193,6 +200,8 @@ function SketchImg({
     <img
       src={sketch.src}
       alt=""
+      width={SKETCH_INTRINSIC_WIDTH}
+      height={SKETCH_INTRINSIC_HEIGHT}
       loading="lazy"
       decoding="async"
       draggable={false}
@@ -315,6 +324,8 @@ function MaterializeElement({ sketch, clip }: { sketch: Sketch; clip: string }) 
         ref={flashRef}
         src={sketch.src}
         alt=""
+        width={SKETCH_INTRINSIC_WIDTH}
+        height={SKETCH_INTRINSIC_HEIGHT}
         loading="lazy"
         decoding="async"
         draggable={false}
@@ -428,16 +439,22 @@ function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topInd
   }
 
   return (
-    <div ref={ref} className="mx-auto flex max-w-5xl px-6" onMouseMove={handleMouseMove}>
+    <div
+      ref={ref}
+      className="mx-auto flex max-w-5xl flex-col gap-1 px-6 sm:flex-row sm:gap-0"
+      onMouseMove={handleMouseMove}
+    >
       {row.map((sketch, idx) => (
         <div
           key={sketch.src}
-          style={{
-            aspectRatio: "3 / 4",
-            marginLeft: idx > 0 ? gap : "0%",
-            zIndex: idx === topIndex ? 1 : 0,
-          }}
-          className="relative block flex-1 select-none"
+          style={
+            {
+              aspectRatio: "3 / 4",
+              "--row-gap": idx > 0 ? gap : "0%",
+              zIndex: idx === topIndex ? 1 : 0,
+            } as React.CSSProperties
+          }
+          className="gallery-row-item relative block w-full select-none sm:w-auto sm:flex-1"
         >
           <GalleryImage
             ref={(handle) => {

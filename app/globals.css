@@ -219,6 +219,15 @@
   }
 }
 
+/* the two sketches in a row stack full-width below sm (see GalleryGrid.tsx's
+   flex-col -> sm:flex-row) — the negative-margin overlap only makes sense
+   once they're side by side, so it's gated to the same breakpoint */
+@media (min-width: 640px) {
+  .gallery-row-item + .gallery-row-item {
+    margin-left: var(--row-gap);
+  }
+}
+
 /*
  * Text selection: dark, not the browser-default blue, with the same
  * red/cyan chromatic fringe as the icon glitch (diagonal, not just
