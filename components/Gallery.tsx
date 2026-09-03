@@ -51,7 +51,23 @@ export function Gallery() {
     <div>
       <GalleryGrid
         rows={rows}
-        intros={[<Intro key="0" className="pb-4 pt-8" />, <Intro key="1" className="pb-2 pt-0" />]}
+        intros={[
+          <Intro
+            key="0"
+            className="pb-4 pt-8"
+            paragraphs={[
+              "Hey, I'm Andrew Rusli! I study CS at Harvard and enjoy thinking about efficient computing and model architectures.",
+              "I'm currently working on GPU inference optimizations for TensorRT-LLM at NVIDIA. Before that, I worked at AWS Annapurna Labs on quantization and kernels for Trainium chips.",
+            ]}
+          />,
+          <Intro
+            key="1"
+            className="pb-2 pt-0"
+            paragraphs={[
+              "Once we solve continual learning, I'll spend the rest of my life enjoying sketching, climbing, animation, snowboarding, indie games and music.",
+            ]}
+          />,
+        ]}
       />
       <Footer />
     </div>
