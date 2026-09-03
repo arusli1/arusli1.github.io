@@ -15,7 +15,7 @@ const rockSalt = Rock_Salt({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Website",
+  title: "Andrew Rusli | Efficient ML",
   description: "Design-heavy scaffold.",
 };
 
