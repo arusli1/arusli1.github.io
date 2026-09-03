@@ -15,8 +15,17 @@ const rockSalt = Rock_Salt({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
-  description: "Design-heavy scaffold.",
+  description: "CS @ Harvard. GPU inference @ NVIDIA. Previously AWS Annapurna Labs.",
+  // without an explicit og:image, some link-preview generators (e.g. iMessage)
+  // fell back to scraping a random sketch off the page instead of showing
+  // nothing — opengraph-image.png (Next's file convention) fixes that
+  robots: {
+    index: true,
+    follow: true,
+    noimageindex: true,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
