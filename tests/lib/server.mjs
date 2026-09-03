@@ -42,7 +42,9 @@ export async function startServer() {
 
   const port = await findFreePort();
   const url = `http://localhost:${port}`;
-  const child = spawn("npx", ["next", "start", "-p", String(port)], {
+  // "next start" doesn't work with `output: "export"` — serve the static
+  // `out/` folder instead, the same way GitHub Pages actually serves it
+  const child = spawn("npx", ["serve", "out", "-l", String(port)], {
     stdio: "inherit",
   });
 
