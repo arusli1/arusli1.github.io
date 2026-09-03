@@ -17,10 +17,21 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
-  description: "CS @ Harvard. GPU inference @ NVIDIA. Previously AWS Annapurna Labs.",
-  // without an explicit og:image, some link-preview generators (e.g. iMessage)
+  // without an explicit image, some link-preview generators (e.g. iMessage)
   // fell back to scraping a random sketch off the page instead of showing
-  // nothing — opengraph-image.png (Next's file convention) fixes that
+  // nothing. "summary" (not "summary_large_image") plus a small square icon
+  // keeps the preview to a compact name + tiny logo, not a big banner card.
+  openGraph: {
+    // just the name, not the "| Efficient ML" tab-title suffix — matches a
+    // plain name + domain + small logo link-preview card
+    title: "Andrew Rusli",
+    images: ["/social-icon.png"],
+  },
+  twitter: {
+    card: "summary",
+    title: "Andrew Rusli",
+    images: ["/social-icon.png"],
+  },
   robots: {
     index: true,
     follow: true,
