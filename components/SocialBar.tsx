@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRevealGlitch } from "@/components/useRevealGlitch";
 
 export const LINKS = [
@@ -57,29 +57,34 @@ export const ICON_REVEAL_TOTAL_MS = ICON_DELAY_MAX_MS + ICON_DURATION_MAX_MS;
 
 export type IconGlitchProps = { style: CSSProperties; className: string };
 
-// a fresh random delay/duration/skip per icon, rolled client-side after
-// mount — not at render time, since Math.random() there would differ
-// between server and client render and break hydration. Re-rolling per
-// mount (rather than a fixed table) is what makes header and footer, and
-// repeat visits, actually glitch differently instead of the same fixed
-// pattern every time. `reveal-skip` (see globals.css) beats the reveal
-// keyframes on specificity alone, without touching the separate hover
-// animation, so a "skipped" icon still glitches fine on hover.
-export function useIconAnimStyles(count: number): IconGlitchProps[] {
+// a fresh random delay/duration/skip per icon, rolled client-side — not at
+// render time, since Math.random() there would differ between server and
+// client render and break hydration. Re-rolls on every rising edge of
+// `revealing` (not just once at mount), so scrolling the bar out of view
+// and back gets a genuinely new pattern each time instead of replaying the
+// same one — otherwise which icon(s) skip looks fixed/deterministic even
+// though the roll itself is random. `reveal-skip` (see globals.css) beats
+// the reveal keyframes on specificity alone, without touching the separate
+// hover animation, so a "skipped" icon still glitches fine on hover.
+export function useIconAnimStyles(count: number, revealing: boolean): IconGlitchProps[] {
   const fallback = Array.from({ length: count }, () => ({ style: {}, className: "" }));
   const [props, setProps] = useState<IconGlitchProps[]>(fallback);
+  const wasRevealingRef = useRef(false);
 
   useEffect(() => {
-    setProps(
-      Array.from({ length: count }, () => ({
-        style: {
-          animationDelay: `${Math.random() * ICON_DELAY_MAX_MS}ms`,
-          animationDuration: `${ICON_DURATION_MIN_MS + Math.random() * (ICON_DURATION_MAX_MS - ICON_DURATION_MIN_MS)}ms`,
-        },
-        className: Math.random() < ICON_REVEAL_SKIP_CHANCE ? "reveal-skip" : "",
-      })),
-    );
-  }, [count]);
+    if (revealing && !wasRevealingRef.current) {
+      setProps(
+        Array.from({ length: count }, () => ({
+          style: {
+            animationDelay: `${Math.random() * ICON_DELAY_MAX_MS}ms`,
+            animationDuration: `${ICON_DURATION_MIN_MS + Math.random() * (ICON_DURATION_MAX_MS - ICON_DURATION_MIN_MS)}ms`,
+          },
+          className: Math.random() < ICON_REVEAL_SKIP_CHANCE ? "reveal-skip" : "",
+        })),
+      );
+    }
+    wasRevealingRef.current = revealing;
+  }, [revealing, count]);
 
   return props;
 }
@@ -105,7 +110,7 @@ export function GlyphIcon({
 
 export function SocialBar() {
   const { ref, revealing } = useRevealGlitch(ICON_REVEAL_TOTAL_MS);
-  const icons = useIconAnimStyles(LINKS.length);
+  const icons = useIconAnimStyles(LINKS.length, revealing);
 
   return (
     <div ref={ref} className="flex items-center justify-center gap-2 border-b border-line bg-paper py-2">

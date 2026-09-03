@@ -6,7 +6,7 @@ import { useRevealGlitch } from "@/components/useRevealGlitch";
 
 export function Footer() {
   const { ref, revealing } = useRevealGlitch(ICON_REVEAL_TOTAL_MS);
-  const icons = useIconAnimStyles(LINKS.length);
+  const icons = useIconAnimStyles(LINKS.length, revealing);
 
   return (
     <div ref={ref} className="flex flex-col items-center gap-2 px-4 pb-8 pt-2">
