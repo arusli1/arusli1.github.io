@@ -17,6 +17,11 @@ const SKETCH_INTRINSIC_HEIGHT = 1607;
 // overlap between the two images in each row, as a % of row width
 const ROW_GAPS = ["-12%", "-15%"];
 
+// stacked (below sm) overlap per row, as a % of row width too — margin-top
+// percentages are relative to width, not height, in CSS, so these run much
+// bigger than ROW_GAPS to read as a real overlap against the images' height
+const STACK_GAPS = ["-34%", "-42%"];
+
 // which image in each row (0 = left, 1 = right) sits on top at the overlap —
 // fixed, not hover-driven, so it never flips while moving the cursor around
 const TOP_INDEX = [1, 0];
@@ -420,7 +425,17 @@ const GalleryImage = forwardRef<GalleryImageHandle, { sketch: Sketch; revealing:
   },
 );
 
-function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topIndex: number }) {
+function GalleryRow({
+  row,
+  gap,
+  stackGap,
+  topIndex,
+}: {
+  row: Sketch[];
+  gap: string;
+  stackGap: string;
+  topIndex: number;
+}) {
   const { ref, revealing } = useRevealGlitch(MATERIALIZE_REVEAL_MS);
   const imageRefs = useRef<(GalleryImageHandle | null)[]>([]);
   const lastTrigger = useRef(0);
@@ -441,7 +456,7 @@ function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topInd
   return (
     <div
       ref={ref}
-      className="mx-auto flex max-w-5xl flex-col gap-1 px-6 sm:flex-row sm:gap-0"
+      className="mx-auto flex max-w-5xl flex-col gap-0 px-6 sm:flex-row"
       onMouseMove={handleMouseMove}
     >
       {row.map((sketch, idx) => (
@@ -451,6 +466,7 @@ function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topInd
             {
               aspectRatio: "3 / 4",
               "--row-gap": idx > 0 ? gap : "0%",
+              "--stack-gap": idx > 0 ? stackGap : "0%",
               zIndex: idx === topIndex ? 1 : 0,
             } as React.CSSProperties
           }
@@ -475,7 +491,12 @@ export function GalleryGrid({ rows, intros }: { rows: Sketch[][]; intros: React.
       {rows.map((row, r) => (
         <div key={r}>
           {intros[r]}
-          <GalleryRow row={row} gap={ROW_GAPS[r] ?? "-2%"} topIndex={TOP_INDEX[r] ?? 1} />
+          <GalleryRow
+            row={row}
+            gap={ROW_GAPS[r] ?? "-2%"}
+            stackGap={STACK_GAPS[r] ?? "-30%"}
+            topIndex={TOP_INDEX[r] ?? 1}
+          />
         </div>
       ))}
     </>

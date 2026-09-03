@@ -220,10 +220,15 @@
 }
 
 /* the two sketches in a row stack full-width below sm (see GalleryGrid.tsx's
-   flex-col -> sm:flex-row) — the negative-margin overlap only makes sense
-   once they're side by side, so it's gated to the same breakpoint */
+   flex-col -> sm:flex-row) — same overlap trick as the side-by-side layout,
+   just along the other axis: vertical overlap while stacked, horizontal once
+   they're side by side at sm and up */
+.gallery-row-item + .gallery-row-item {
+  margin-top: var(--stack-gap);
+}
 @media (min-width: 640px) {
   .gallery-row-item + .gallery-row-item {
+    margin-top: 0;
     margin-left: var(--row-gap);
   }
 }
