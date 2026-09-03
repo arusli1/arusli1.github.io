@@ -36,7 +36,11 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    // noimageindex keeps the sketches out of Google Images; max-image-preview
+    // "none" is the separate directive that stops Google from pulling one of
+    // them in as a search-result or Discover thumbnail
     noimageindex: true,
+    "max-image-preview": "none",
   },
 };
 
