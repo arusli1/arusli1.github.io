@@ -455,7 +455,7 @@ function GalleryRow({
   return (
     <div
       ref={ref}
-      className="mx-auto flex max-w-5xl flex-col gap-0 px-6 sm:flex-row"
+      className="mx-auto flex max-w-5xl flex-col gap-0 px-3 sm:flex-row sm:px-6"
       onMouseMove={handleMouseMove}
     >
       {row.map((sketch, idx) => (

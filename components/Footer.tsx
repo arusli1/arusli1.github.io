@@ -9,7 +9,7 @@ export function Footer() {
   const icons = useIconAnimStyles(LINKS.length, revealing);
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-2 px-4 pb-8 pt-2">
+    <div ref={ref} className="flex flex-col items-center gap-2 px-2 pb-8 pt-2 sm:px-4">
       <div className="flex flex-wrap items-center justify-center gap-4">
         {LINKS.map(({ name, href, path, viewBox }, i) => (
           <a

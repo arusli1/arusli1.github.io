@@ -13,7 +13,7 @@ export function Intro({
   const { ref, revealing } = useRevealGlitch();
 
   return (
-    <div ref={ref} className={`mx-auto max-w-lg px-4 ${className}`}>
+    <div ref={ref} className={`mx-auto max-w-lg px-2 sm:px-4 ${className}`}>
       <div className="text-left font-mono text-sm leading-relaxed text-ink">
         {paragraphs.map((paragraph, i) => (
           <p key={i} className={i > 0 ? "mt-4" : undefined}>
