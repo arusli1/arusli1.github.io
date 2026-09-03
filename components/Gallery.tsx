@@ -76,7 +76,7 @@ export function Gallery() {
           />,
           <Intro
             key="1"
-            className="pb-1 pt-0"
+            className="-mt-1 pb-1 pt-0"
             paragraphs={[
               "Once we solve continual learning, I'll spend the rest of my life sketching, climbing, animating, snowboarding, and enjoying indie games & music.",
             ]}
