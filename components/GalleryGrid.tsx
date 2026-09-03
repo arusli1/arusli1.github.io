@@ -195,16 +195,18 @@ function SketchImg({
   sketch,
   className,
   animationDelay,
+  alt = "",
 }: {
   sketch: Sketch;
   className: string;
   animationDelay?: string;
+  alt?: string;
 }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={sketch.src}
-      alt=""
+      alt={alt}
       width={SKETCH_INTRINSIC_WIDTH}
       height={SKETCH_INTRINSIC_HEIGHT}
       loading="lazy"
@@ -408,6 +410,7 @@ const GalleryImage = forwardRef<GalleryImageHandle, { sketch: Sketch; revealing:
         <SketchImg
           sketch={sketch}
           className="reveal-img pointer-events-none h-full w-full select-none object-contain"
+          alt="Ink sketch by Andrew Rusli"
         />
         {revealing &&
           elements.map((el) => (

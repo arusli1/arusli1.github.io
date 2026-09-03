@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Rock_Salt } from "next/font/google";
 import "./globals.css";
 import { SocialBar } from "@/components/SocialBar";
@@ -38,6 +38,12 @@ export const metadata: Metadata = {
     follow: true,
     noimageindex: true,
   },
+};
+
+// matches --color-paper — mobile browser chrome (address bar, etc.) tints to
+// the site's own black instead of defaulting to white
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 // a real signal for search engines' entity/name detection — Google's own
