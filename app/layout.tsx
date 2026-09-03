@@ -16,7 +16,7 @@ const rockSalt = Rock_Salt({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
-  title: "Andrew Rusli | Efficient ML",
+  title: "Andrew Rusli",
   // no og:image at all was tried and confirmed broken — iMessage falls back
   // to scraping a random sketch off the page instead of showing nothing.
   // A real designed banner (app/opengraph-image.png, Next's file convention
