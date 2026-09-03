@@ -17,20 +17,18 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
-  // without an explicit image, some link-preview generators (e.g. iMessage)
-  // fell back to scraping a random sketch off the page instead of showing
-  // nothing. "summary" (not "summary_large_image") plus a small square icon
-  // keeps the preview to a compact name + tiny logo, not a big banner card.
+  // Apple's Link Presentation (iMessage's preview) renders any og:image as a
+  // large hero, ignoring twitter:card "summary" sizing hints entirely — the
+  // compact name + domain + tiny logo look comes from having NO og:image at
+  // all, so it falls back to the page's own <link rel="icon"> (app/icon.svg)
   openGraph: {
     // just the name, not the "| Efficient ML" tab-title suffix — matches a
     // plain name + domain + small logo link-preview card
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   twitter: {
     card: "summary",
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   robots: {
     index: true,
