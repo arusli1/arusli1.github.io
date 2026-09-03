@@ -46,7 +46,7 @@ function rollChunkLength() {
 }
 
 // a run of plain text, or a run that should render as a clickable link
-export type GlitchSegment = string | { text: string; href: string };
+export type GlitchSegment = string | { text: string; href: string; external?: boolean };
 
 export function GlitchText({
   content,
@@ -398,12 +398,13 @@ export function GlitchText({
           <span key={i}>{ch}</span>
         ));
         if (typeof seg === "string") return <Fragment key={si}>{chars}</Fragment>;
+        const external = seg.external ?? true;
         return (
           <a
             key={si}
             href={seg.href}
-            target="_blank"
-            rel="noopener noreferrer"
+            target={external ? "_blank" : undefined}
+            rel={external ? "noopener noreferrer" : undefined}
             className="font-link lowercase"
           >
             {chars}
