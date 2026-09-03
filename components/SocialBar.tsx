@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useRevealGlitch } from "@/components/useRevealGlitch";
 
 export const LINKS = [
@@ -41,6 +42,27 @@ export const LINKS = [
   },
 ];
 
+// per-icon glitch timing: fixed (not Math.random — that would differ between
+// server and client render and break hydration), spread wide so a reveal
+// burst or hover doesn't start or end at the same moment for every icon
+const ICON_ANIM_DELAY_MS = [0, 140, 40, 280, 90, 380];
+const ICON_ANIM_DURATION_MS = [350, 700, 500, 850, 550, 620];
+
+export function iconAnimStyle(i: number): CSSProperties {
+  return {
+    animationDelay: `${ICON_ANIM_DELAY_MS[i % ICON_ANIM_DELAY_MS.length]}ms`,
+    animationDuration: `${ICON_ANIM_DURATION_MS[i % ICON_ANIM_DURATION_MS.length]}ms`,
+  };
+}
+
+// how long the "is-revealing" class must stay applied to cover every icon's
+// own delay+duration above — otherwise useRevealGlitch's shared timeout
+// strips the class (and cuts every animation short) at the same instant for
+// all of them, undoing the per-icon variance entirely
+export const ICON_REVEAL_TOTAL_MS = Math.max(
+  ...ICON_ANIM_DELAY_MS.map((d, i) => d + ICON_ANIM_DURATION_MS[i]),
+);
+
 // sizes match arusli1.github.io's own header/footer icon sizing (1.7rem /
 // 3.5rem) — set as an explicit rem size rather than a spacing-scale utility,
 // since this project's doubled --spacing token would otherwise inflate them
@@ -61,17 +83,18 @@ export function GlyphIcon({
 }
 
 export function SocialBar() {
-  const { ref, revealing } = useRevealGlitch();
+  const { ref, revealing } = useRevealGlitch(ICON_REVEAL_TOTAL_MS);
 
   return (
-    <div ref={ref} className="flex items-center justify-center gap-2 border-b border-line bg-paper py-1">
-      {LINKS.map(({ name, href, path, viewBox }) => (
+    <div ref={ref} className="flex items-center justify-center gap-2 border-b border-line bg-paper py-2">
+      {LINKS.map(({ name, href, path, viewBox }, i) => (
         <a
           key={name}
           href={href}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={name}
+          style={iconAnimStyle(i)}
           className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""}`}
         >
           <GlyphIcon path={path} viewBox={viewBox} />
