@@ -57,9 +57,9 @@ export function Gallery() {
             className="pb-1 pt-5"
             paragraphs={[
               [
-                "Hey, I'm Andrew! I study CS at ",
+                "Hi! I'm Andrew. I study CS at ",
                 { text: "Harvard", href: "https://www.harvard.edu/" },
-                " and enjoy thinking about efficient computing and model architectures.",
+                ", and I like thinking about efficient computing and model architectures.",
               ],
               [
                 "I'm currently working on GPU inference optimizations on the ",
