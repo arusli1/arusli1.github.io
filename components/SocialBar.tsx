@@ -1,6 +1,8 @@
 "use client";
 
-const LINKS = [
+import { useRevealGlitch } from "@/components/useRevealGlitch";
+
+export const LINKS = [
   {
     name: "Email",
     href: "mailto:acrusli07@gmail.com",
@@ -39,17 +41,30 @@ const LINKS = [
   },
 ];
 
-function GlyphIcon({ path, viewBox }: { path: string; viewBox: string }) {
+// sizes match arusli1.github.io's own header/footer icon sizing (1.7rem /
+// 3.5rem) — set as an explicit rem size rather than a spacing-scale utility,
+// since this project's doubled --spacing token would otherwise inflate them
+export function GlyphIcon({
+  path,
+  viewBox,
+  size = "1.7rem",
+}: {
+  path: string;
+  viewBox: string;
+  size?: string;
+}) {
   return (
-    <svg viewBox={viewBox} fill="currentColor" className="h-6 w-6">
+    <svg viewBox={viewBox} fill="currentColor" style={{ width: size, height: size }}>
       <path d={path} />
     </svg>
   );
 }
 
 export function SocialBar() {
+  const { ref, revealing } = useRevealGlitch();
+
   return (
-    <div className="flex items-center justify-center gap-2 border-b border-line bg-paper py-3">
+    <div ref={ref} className="flex items-center justify-center gap-2 border-b border-line bg-paper py-1">
       {LINKS.map(({ name, href, path, viewBox }) => (
         <a
           key={name}
@@ -57,7 +72,7 @@ export function SocialBar() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={name}
-          className="text-ink transition-colors hover:text-accent"
+          className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""}`}
         >
           <GlyphIcon path={path} viewBox={viewBox} />
         </a>
