@@ -78,7 +78,7 @@ export function Gallery() {
             key="1"
             className="pb-1 pt-0"
             paragraphs={[
-              "Once we solve continual learning, I'll spend the rest of my life enjoying sketching, climbing, animation, snowboarding, indie games and music.",
+              "Once we solve continual learning, I'll spend the rest of my life sketching, climbing, animating, snowboarding, and enjoying indie games & music.",
             ]}
           />,
         ]}
