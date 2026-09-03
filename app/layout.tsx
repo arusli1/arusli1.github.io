@@ -17,21 +17,19 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
-  // no og:image at all was tried and confirmed broken — iMessage falls back
-  // to scraping a random sketch off the page, not a small favicon. A small
-  // square image + twitter:card "summary" is the one that actually avoids
-  // that while staying compact (some over-eager clients still render it
-  // larger than a true favicon, but it's not a full sketch-scraping banner)
+  // shreyanpaliwal.com's real (JS-rendered) homepage has no og:image at all
+  // either, just icon.png + apple-touch-icon (both PNG) — the first attempt
+  // at this, before app/apple-icon.png existed, fell back to scraping a
+  // sketch off the page instead. Retrying now that a real PNG
+  // apple-touch-icon exists, matching their actual setup.
   openGraph: {
     // just the name, not the "| Efficient ML" tab-title suffix — matches a
     // plain name + domain + small logo link-preview card
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   twitter: {
     card: "summary",
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   robots: {
     index: true,
