@@ -150,6 +150,14 @@
   animation: icon-rgb-glitch-c 0.6s steps(1, end) 2;
 }
 
+/* rolled per icon in SocialBar.tsx: some icons skip the reveal burst
+   entirely, same idea as GlitchText not touching every character. Three
+   classes beats the nth-of-type rules above on specificity, but leaves the
+   :hover/:focus-visible animation (a different rule entirely) untouched */
+.icon-rgb-glitch.reveal-skip.is-revealing {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .icon-rgb-glitch {
     transition: none;

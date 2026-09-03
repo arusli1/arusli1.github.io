@@ -6,7 +6,7 @@ import { useRevealGlitch } from "@/components/useRevealGlitch";
 
 export function Footer() {
   const { ref, revealing } = useRevealGlitch(ICON_REVEAL_TOTAL_MS);
-  const styles = useIconAnimStyles(LINKS.length);
+  const icons = useIconAnimStyles(LINKS.length);
 
   return (
     <div ref={ref} className="flex flex-col items-center gap-2 px-4 pb-8 pt-2">
@@ -18,8 +18,8 @@ export function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={name}
-            style={styles[i]}
-            className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""}`}
+            style={icons[i].style}
+            className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""} ${icons[i].className}`}
           >
             <GlyphIcon path={path} viewBox={viewBox} size="3.5rem" />
           </a>

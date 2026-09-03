@@ -54,7 +54,7 @@ export function Gallery() {
         intros={[
           <Intro
             key="0"
-            className="pb-2 pt-6"
+            className="pb-2 pt-4"
             paragraphs={[
               [
                 "Hey, I'm Andrew! I study CS at ",

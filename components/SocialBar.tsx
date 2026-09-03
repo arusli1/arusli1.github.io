@@ -42,9 +42,12 @@ export const LINKS = [
   },
 ];
 
-const ICON_DELAY_MAX_MS = 160;
-const ICON_DURATION_MIN_MS = 220;
-const ICON_DURATION_MAX_MS = 420;
+const ICON_DELAY_MAX_MS = 260;
+const ICON_DURATION_MIN_MS = 150;
+const ICON_DURATION_MAX_MS = 520;
+// chance a given icon skips its reveal burst entirely this time, same idea
+// as GlitchText's own reveal not touching every character
+const ICON_REVEAL_SKIP_CHANCE = 1 / 6;
 
 // worst case any icon's delay+duration could roll to above — how long the
 // "is-revealing" class must stay applied, otherwise useRevealGlitch's shared
@@ -52,25 +55,33 @@ const ICON_DURATION_MAX_MS = 420;
 // instant for all of them, undoing the per-icon variance entirely
 export const ICON_REVEAL_TOTAL_MS = ICON_DELAY_MAX_MS + ICON_DURATION_MAX_MS;
 
-// a fresh random delay+duration per icon, rolled client-side after mount —
-// not at render time, since Math.random() there would differ between server
-// and client render and break hydration. Re-rolling per mount (rather than a
-// fixed table) is what makes header and footer, and repeat visits, actually
-// glitch differently instead of the same fixed pattern every time.
-export function useIconAnimStyles(count: number): CSSProperties[] {
-  const fallback = Array.from({ length: count }, () => ({}));
-  const [styles, setStyles] = useState<CSSProperties[]>(fallback);
+export type IconGlitchProps = { style: CSSProperties; className: string };
+
+// a fresh random delay/duration/skip per icon, rolled client-side after
+// mount — not at render time, since Math.random() there would differ
+// between server and client render and break hydration. Re-rolling per
+// mount (rather than a fixed table) is what makes header and footer, and
+// repeat visits, actually glitch differently instead of the same fixed
+// pattern every time. `reveal-skip` (see globals.css) beats the reveal
+// keyframes on specificity alone, without touching the separate hover
+// animation, so a "skipped" icon still glitches fine on hover.
+export function useIconAnimStyles(count: number): IconGlitchProps[] {
+  const fallback = Array.from({ length: count }, () => ({ style: {}, className: "" }));
+  const [props, setProps] = useState<IconGlitchProps[]>(fallback);
 
   useEffect(() => {
-    setStyles(
+    setProps(
       Array.from({ length: count }, () => ({
-        animationDelay: `${Math.random() * ICON_DELAY_MAX_MS}ms`,
-        animationDuration: `${ICON_DURATION_MIN_MS + Math.random() * (ICON_DURATION_MAX_MS - ICON_DURATION_MIN_MS)}ms`,
+        style: {
+          animationDelay: `${Math.random() * ICON_DELAY_MAX_MS}ms`,
+          animationDuration: `${ICON_DURATION_MIN_MS + Math.random() * (ICON_DURATION_MAX_MS - ICON_DURATION_MIN_MS)}ms`,
+        },
+        className: Math.random() < ICON_REVEAL_SKIP_CHANCE ? "reveal-skip" : "",
       })),
     );
   }, [count]);
 
-  return styles;
+  return props;
 }
 
 // sizes match arusli1.github.io's own header/footer icon sizing (1.7rem /
@@ -94,7 +105,7 @@ export function GlyphIcon({
 
 export function SocialBar() {
   const { ref, revealing } = useRevealGlitch(ICON_REVEAL_TOTAL_MS);
-  const styles = useIconAnimStyles(LINKS.length);
+  const icons = useIconAnimStyles(LINKS.length);
 
   return (
     <div ref={ref} className="flex items-center justify-center gap-2 border-b border-line bg-paper py-2">
@@ -105,8 +116,8 @@ export function SocialBar() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={name}
-          style={styles[i]}
-          className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""}`}
+          style={icons[i].style}
+          className={`icon-rgb-glitch text-ink ${revealing ? "is-revealing" : ""} ${icons[i].className}`}
         >
           <GlyphIcon path={path} viewBox={viewBox} />
         </a>
