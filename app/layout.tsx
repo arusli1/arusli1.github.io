@@ -17,18 +17,21 @@ const rockSalt = Rock_Salt({
 export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
-  // Apple's Link Presentation (iMessage's preview) renders any og:image as a
-  // large hero, ignoring twitter:card "summary" sizing hints entirely — the
-  // compact name + domain + tiny logo look comes from having NO og:image at
-  // all, so it falls back to the page's own <link rel="icon"> (app/icon.svg)
+  // no og:image at all was tried and confirmed broken — iMessage falls back
+  // to scraping a random sketch off the page, not a small favicon. A small
+  // square image + twitter:card "summary" is the one that actually avoids
+  // that while staying compact (some over-eager clients still render it
+  // larger than a true favicon, but it's not a full sketch-scraping banner)
   openGraph: {
     // just the name, not the "| Efficient ML" tab-title suffix — matches a
     // plain name + domain + small logo link-preview card
     title: "Andrew Rusli",
+    images: ["/social-icon.png"],
   },
   twitter: {
     card: "summary",
     title: "Andrew Rusli",
+    images: ["/social-icon.png"],
   },
   robots: {
     index: true,
