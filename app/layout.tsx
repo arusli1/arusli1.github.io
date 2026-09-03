@@ -18,20 +18,17 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://arusli1.github.io"),
   title: "Andrew Rusli | Efficient ML",
   // no og:image at all was tried and confirmed broken — iMessage falls back
-  // to scraping a random sketch off the page, not a small favicon. A small
-  // square image + twitter:card "summary" is the one that actually avoids
-  // that while staying compact (some over-eager clients still render it
-  // larger than a true favicon, but it's not a full sketch-scraping banner)
+  // to scraping a random sketch off the page instead of showing nothing.
+  // A real designed banner (app/opengraph-image.png, Next's file convention
+  // — picked up automatically, no images[] needed here) is the actual fix:
+  // it's real gallery content either way, so show our own crop of it
+  // instead of leaving it to a scraper's guess.
   openGraph: {
-    // just the name, not the "| Efficient ML" tab-title suffix — matches a
-    // plain name + domain + small logo link-preview card
+    // just the name, not the "| Efficient ML" tab-title suffix
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   twitter: {
-    card: "summary",
     title: "Andrew Rusli",
-    images: ["/social-icon.png"],
   },
   robots: {
     index: true,
