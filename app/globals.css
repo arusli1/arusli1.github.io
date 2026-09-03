@@ -162,6 +162,55 @@
 }
 
 /*
+ * Sketch images: a brief glitch-in burst the first time (and every time) a
+ * row scrolls into view. --img-brightness carries each image's own tuned
+ * brightness correction (see GalleryGrid.tsx) through the whole animation,
+ * so it still resolves to the correct steady-state look at 100%.
+ */
+.reveal-img {
+  filter: invert(1) brightness(var(--img-brightness, 1));
+  transition: filter 300ms ease-out;
+}
+
+.reveal-img.is-revealing {
+  animation: image-glitch-in 0.7s steps(1, end) 1;
+}
+
+@keyframes image-glitch-in {
+  0% {
+    filter: invert(1) brightness(calc(var(--img-brightness, 1) * 0.6))
+      drop-shadow(2px 0 0 #ff2d55) drop-shadow(-2px 0 0 #33ccff);
+  }
+  15% {
+    filter: invert(1) brightness(calc(var(--img-brightness, 1) * 1.15))
+      drop-shadow(-1.5px 1.5px 0 #ff2d55) drop-shadow(1.5px -1.5px 0 #33ccff);
+  }
+  30% {
+    filter: invert(1) brightness(var(--img-brightness, 1)) drop-shadow(1px -1px 0 #ff2d55)
+      drop-shadow(-1px 1px 0 #33ccff);
+  }
+  45% {
+    filter: invert(1) brightness(calc(var(--img-brightness, 1) * 0.75));
+  }
+  60% {
+    filter: invert(1) brightness(calc(var(--img-brightness, 1) * 1.1))
+      drop-shadow(-1px -1px 0 #ff2d55) drop-shadow(1px 1px 0 #33ccff);
+  }
+  100% {
+    filter: invert(1) brightness(var(--img-brightness, 1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-img {
+    transition: none;
+  }
+  .reveal-img.is-revealing {
+    animation: none;
+  }
+}
+
+/*
  * "Andrew Rusli" title: each star is one sampled cell of the blackletter
  * glyph coverage (see titleGrid.ts), drawn as a small SVG sparkle mark (not
  * text — a glyph's font-size can't vary per-star and stay on the fixed type

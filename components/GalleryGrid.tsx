@@ -1,117 +1,430 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRevealGlitch } from "@/components/useRevealGlitch";
+import { SKETCH_ELEMENTS, type SketchElement } from "@/components/sketchElements";
+import { GAP_HOTSPOTS } from "@/components/gapHotspots";
 
-// overlap between each image and the one before it, as a % of row width so it
-// scales with the row instead of eating a bigger share of it at narrow widths
-const GAP_BEFORE = ["0%", "-2.83%", "-0.85%", "-1.7%"];
+export type Sketch = { src: string; nudgeUp: string; brightness: string };
 
-// per-image vertical nudge, as a % of the image's own height (not a fixed
-// px amount) so it stays proportional at any viewport width
-const NUDGE_UP = ["-3%", "0%", "0%", "-3.4%"];
+// overlap between the two images in each row, as a % of row width
+const ROW_GAPS = ["-12%", "-15%"];
 
-// per-image brightness so the inverted graphite reads ~equally bright across
-// the row (original pencil pressure varies, so plain invert() doesn't)
-const BRIGHTNESS = ["1.35", "1.61", "1.1", "1.32"];
+// which image in each row (0 = left, 1 = right) sits on top at the overlap —
+// fixed, not hover-driven, so it never flips while moving the cursor around
+const TOP_INDEX = [1, 0];
 
-export function GalleryGrid({ sketches }: { sketches: string[] }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+// cursor movement triggers nearby sections to pulse-glitch — not one patch
+// gliding around glued to the pointer
+const HOVER_TRIGGER_INTERVAL = 110;
+const HOVER_PATCH_LIFETIME = 650;
+// how often hover renders a generic shard/n-gon instead of the nearest real
+// element, even when one's right there — real elements now cover most of a
+// sketch, so without this every hover in the same spot looks identical
+const HOVER_GENERIC_CHANCE = 0.3;
 
-  const close = () => setOpenIndex(null);
-  const prev = () =>
-    setOpenIndex((i) => (i === null ? i : (i - 1 + sketches.length) % sketches.length));
-  const next = () =>
-    setOpenIndex((i) => (i === null ? i : (i + 1) % sketches.length));
+// each element starts materializing at a random point in this window, so a
+// pile of elements doesn't queue up strictly by index — the delay stays
+// bounded no matter how many elements an image has
+const MATERIALIZE_MAX_STAGGER_MS = 300;
+// "gone" reads as a brief flicker of absence, not a lingering hole — held
+// noticeably shorter than a glitch/settled step
+const MATERIALIZE_GONE_MIN_MS = 20;
+const MATERIALIZE_GONE_MAX_MS = 50;
+const MATERIALIZE_STEP_MIN_MS = 55;
+const MATERIALIZE_STEP_MAX_MS = 130;
+const MATERIALIZE_MIN_STEPS = 2;
+const MATERIALIZE_MAX_STEPS = 7;
+// worst case: max stagger + a full-length sequence of the longest steps,
+// plus headroom — the row must stay "revealing" for at least this long
+const MATERIALIZE_REVEAL_MS =
+  MATERIALIZE_MAX_STAGGER_MS + MATERIALIZE_MAX_STEPS * MATERIALIZE_STEP_MAX_MS + 200;
+
+// generic block/band shapes join the real elements on reveal too — not
+// everything that glitches has to be a named object. Scales with how many
+// real elements the image has, so they stay a clearly-present minority
+// rather than getting lost against 30+ elements
+const MATERIALIZE_GENERIC_RATIO = 0.28;
+const MATERIALIZE_GENERIC_COUNT_MIN = 4;
+
+function clampPct(v: number) {
+  return Math.max(0, Math.min(100, v));
+}
+
+function polygonClip(points: [number, number][]) {
+  return `polygon(${points.map(([x, y]) => `${clampPct(x)}% ${clampPct(y)}%`).join(", ")})`;
+}
+
+// a rotated thin band — reads closer to a stroke or a single thin object
+// than an axis-aligned box
+function bandClip(centerX?: number, centerY?: number) {
+  const cx = clampPct((centerX ?? 15 + Math.random() * 70) + (Math.random() - 0.5) * 10);
+  const cy = clampPct((centerY ?? 15 + Math.random() * 70) + (Math.random() - 0.5) * 10);
+  const len = 55 + Math.random() * 65;
+  const thick = 7 + Math.random() * 12;
+  const angle = Math.random() * 180;
+  const rad = (angle * Math.PI) / 180;
+  const dx = Math.cos(rad);
+  const dy = Math.sin(rad);
+  const px = -dy;
+  const py = dx;
+  const hl = len / 2;
+  const ht = thick / 2;
+  const corners: [number, number][] = [
+    [cx - dx * hl - px * ht, cy - dy * hl - py * ht],
+    [cx + dx * hl - px * ht, cy + dy * hl - py * ht],
+    [cx + dx * hl + px * ht, cy + dy * hl + py * ht],
+    [cx - dx * hl + px * ht, cy - dy * hl + py * ht],
+  ];
+  return polygonClip(corners);
+}
+
+function blockClip(centerX?: number, centerY?: number) {
+  const w = 16 + Math.random() * 18;
+  const h = 16 + Math.random() * 18;
+  const left =
+    centerX === undefined
+      ? Math.random() * (100 - w)
+      : Math.min(100 - w, Math.max(0, centerX - w / 2 + (Math.random() - 0.5) * 12));
+  const top =
+    centerY === undefined
+      ? Math.random() * (100 - h)
+      : Math.min(100 - h, Math.max(0, centerY - h / 2 + (Math.random() - 0.5) * 12));
+  return `inset(${top}% ${100 - left - w}% ${100 - top - h}% ${left}%)`;
+}
+
+// an irregular concave/convex n-gon — each vertex's radius is jittered
+// independently, so it's never a clean regular polygon
+function nGonClip(centerX?: number, centerY?: number) {
+  const cx = clampPct((centerX ?? 15 + Math.random() * 70) + (Math.random() - 0.5) * 8);
+  const cy = clampPct((centerY ?? 15 + Math.random() * 70) + (Math.random() - 0.5) * 8);
+  const sides = 5 + Math.floor(Math.random() * 4);
+  const baseRadius = 12 + Math.random() * 22;
+  const rotation = Math.random() * Math.PI * 2;
+  const points: [number, number][] = [];
+  for (let i = 0; i < sides; i++) {
+    const angle = rotation + (i / sides) * Math.PI * 2;
+    const r = baseRadius * (0.45 + Math.random() * 1.0);
+    points.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r * 0.82]);
+  }
+  return polygonClip(points);
+}
+
+// fallback shape for hover when the cursor isn't over any detected element —
+// mostly rotated shards and irregular n-gons, a plain box only occasionally
+function genericClip(centerX?: number, centerY?: number) {
+  const r = Math.random();
+  if (r < 0.48) return bandClip(centerX, centerY);
+  if (r < 0.85) return nGonClip(centerX, centerY);
+  return blockClip(centerX, centerY);
+}
+
+// hover prefers a real detected object over a generic shape: the element
+// under the cursor if any, else the nearest one within range — with a
+// couple dozen elements per image, nearly every hover point lands near one
+const HOVER_ELEMENT_RADIUS = 22;
+
+function centroid(points: [number, number][]): [number, number] {
+  let sx = 0;
+  let sy = 0;
+  for (const [x, y] of points) {
+    sx += x;
+    sy += y;
+  }
+  return [sx / points.length, sy / points.length];
+}
+
+function nearestElement(elements: SketchElement[], px: number, py: number) {
+  const inside = elements.find((el) => pointInPolygon(px, py, el.points));
+  if (inside) return inside;
+
+  let best: SketchElement | null = null;
+  let bestDist = Infinity;
+  for (const el of elements) {
+    const [cx, cy] = centroid(el.points);
+    const dist = Math.hypot(cx - px, cy - py);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = el;
+    }
+  }
+  return best && bestDist <= HOVER_ELEMENT_RADIUS ? best : null;
+}
+
+function pointInPolygon(px: number, py: number, points: [number, number][]) {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    const intersect = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function keyFor(src: string) {
+  return src.split("/").pop() ?? src;
+}
+
+// sketch elements are detected against the raw image; the rendered image is
+// shifted by nudgeUp (translateY, a % of its own box), so shift the element
+// coordinates the same amount to keep them aligned to what's on screen
+function elementsFor(sketch: Sketch): SketchElement[] {
+  const raw = SKETCH_ELEMENTS[keyFor(sketch.src)] ?? [];
+  const nudge = parseFloat(sketch.nudgeUp) || 0;
+  if (nudge === 0) return raw;
+  return raw.map((el) => ({
+    ...el,
+    points: el.points.map(([x, y]) => [x, clampPct(y + nudge)] as [number, number]),
+  }));
+}
+
+function SketchImg({
+  sketch,
+  className,
+  animationDelay,
+}: {
+  sketch: Sketch;
+  className: string;
+  animationDelay?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={sketch.src}
+      alt=""
+      loading="lazy"
+      draggable={false}
+      className={className}
+      style={
+        {
+          transform: `translateY(${sketch.nudgeUp})`,
+          "--img-brightness": sketch.brightness,
+          animationDelay,
+        } as React.CSSProperties
+      }
+    />
+  );
+}
+
+// a detected object's materialize-in timeline: a random walk through
+// "gone" (erased against the page background), "glitch" (a flickered,
+// fringed flash of the real image), and "settled" (nothing extra — the
+// always-present base already shows correctly), always ending on settled.
+// Order and length are randomized per element so nothing repeats the same
+// rhythm — could be gone-glitch-settled, glitch-glitch-settled, gone-
+// glitch-gone-glitch-settled, and so on.
+type MaterializeStep = "gone" | "glitch" | "settled";
+
+function rollMaterializeSequence(): { state: MaterializeStep; holdMs: number }[] {
+  // skewed toward the short end (most elements do a quick 2-3 step flash),
+  // with an occasional longer, more elaborate one in the tail — not every
+  // element at the same "energy" level
+  const spread = MATERIALIZE_MAX_STEPS - MATERIALIZE_MIN_STEPS;
+  const stepCount = MATERIALIZE_MIN_STEPS + Math.floor(Math.random() ** 1.8 * (spread + 1));
+  const steps: { state: MaterializeStep; holdMs: number }[] = [];
+  let sawGlitch = false;
+  for (let i = 0; i < stepCount - 1; i++) {
+    const isLastIntermediate = i === stepCount - 2;
+    let state: MaterializeStep;
+    if (isLastIntermediate && !sawGlitch) {
+      // every element glitches at least once before it settles
+      state = "glitch";
+    } else {
+      const r = Math.random();
+      state = r < 0.48 ? "glitch" : r < 0.63 ? "gone" : "settled";
+    }
+    if (state === "glitch") sawGlitch = true;
+    const holdMs =
+      state === "gone"
+        ? MATERIALIZE_GONE_MIN_MS + Math.random() * (MATERIALIZE_GONE_MAX_MS - MATERIALIZE_GONE_MIN_MS)
+        : MATERIALIZE_STEP_MIN_MS + Math.random() * (MATERIALIZE_STEP_MAX_MS - MATERIALIZE_STEP_MIN_MS);
+    steps.push({ state, holdMs });
+  }
+  steps.push({ state: "settled", holdMs: 0 });
+  return steps;
+}
+
+// a fresh, randomized red/cyan chromatic fringe each glitch step — vary the
+// offset and brightness swing, not the colors, matching the icon/text glitch
+function glitchFilter(brightness: number) {
+  const mag = 1 + Math.random() * 1.5;
+  const angle = Math.random() * Math.PI * 2;
+  const dx = Math.cos(angle) * mag;
+  const dy = Math.sin(angle) * mag;
+  const brightnessMul = 0.7 + Math.random() * 0.6;
+  return (
+    `invert(1) brightness(${(brightness * brightnessMul).toFixed(2)}) ` +
+    `drop-shadow(${dx.toFixed(2)}px ${dy.toFixed(2)}px 0 #ff2d55) ` +
+    `drop-shadow(${(-dx).toFixed(2)}px ${(-dy).toFixed(2)}px 0 #33ccff)`
+  );
+}
+
+function MaterializeElement({ sketch, clip }: { sketch: Sketch; clip: string }) {
+  const eraseRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (openIndex === null) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
+    const erase = eraseRef.current;
+    const flash = flashRef.current;
+    if (!erase || !flash) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const brightness = Number(sketch.brightness) || 1;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    function apply(state: MaterializeStep) {
+      if (!erase || !flash) return;
+      if (state === "gone") {
+        erase.style.opacity = "1";
+        flash.style.opacity = "0";
+      } else if (state === "glitch") {
+        erase.style.opacity = "0";
+        flash.style.filter = glitchFilter(brightness);
+        flash.style.opacity = "1";
+      } else {
+        erase.style.opacity = "0";
+        flash.style.opacity = "0";
+      }
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openIndex]);
+
+    // stays the always-correct base image (erase/flash both start at
+    // opacity 0) until this element's own staggered start time — nothing
+    // should blank out the moment the row starts revealing
+    let elapsed = Math.random() * MATERIALIZE_MAX_STAGGER_MS;
+    for (const step of rollMaterializeSequence()) {
+      timeouts.push(setTimeout(() => apply(step.state), elapsed));
+      elapsed += step.holdMs;
+    }
+
+    return () => {
+      for (const t of timeouts) clearTimeout(t);
+    };
+  }, [clip, sketch.brightness]);
 
   return (
-    <>
-      <div className="flex px-6">
-        {sketches.map((src, i) => (
-          <button
-            key={src}
-            type="button"
-            onClick={() => setOpenIndex(i)}
-            style={{ aspectRatio: "3 / 4", marginLeft: GAP_BEFORE[i] ?? "0%" }}
-            className="relative block flex-1 z-0 hover:z-10 focus-visible:z-10"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt=""
-              loading="lazy"
-              className="h-full w-full object-contain"
-              style={{
-                transform: `translateY(${NUDGE_UP[i] ?? "0%"})`,
-                filter: `invert(1) brightness(${BRIGHTNESS[i] ?? "1"})`,
-              }}
-            />
-          </button>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ clipPath: clip }}>
+      <div
+        ref={eraseRef}
+        className="absolute inset-0"
+        style={{ backgroundColor: "var(--color-paper)", opacity: 0 }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={flashRef}
+        src={sketch.src}
+        alt=""
+        draggable={false}
+        className="pointer-events-none h-full w-full select-none object-contain"
+        style={{ transform: `translateY(${sketch.nudgeUp})`, opacity: 0 }}
+      />
+    </div>
+  );
+}
+
+function HoverPatch({ sketch, clip }: { sketch: Sketch; clip: string }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ clipPath: clip }}>
+      <SketchImg
+        sketch={sketch}
+        className="reveal-img is-revealing pointer-events-none h-full w-full select-none object-contain"
+      />
+    </div>
+  );
+}
+
+function GalleryImage({ sketch, revealing }: { sketch: Sketch; revealing: boolean }) {
+  const elements = useMemo(() => elementsFor(sketch), [sketch]);
+  const [hoverPatches, setHoverPatches] = useState<{ id: number; clip: string }[]>([]);
+  const lastTrigger = useRef(0);
+  const nextId = useRef(0);
+
+  // rolled once per reveal burst, not once per render — otherwise these
+  // would reshuffle on every unrelated re-render while still revealing.
+  // Every known low-density gap gets a bias slot (varied shard/n-gon shape,
+  // not a fixed static one), topped up with fully random ones for texture.
+  const genericClips = useMemo(() => {
+    if (!revealing) return [];
+    const hotspots = GAP_HOTSPOTS[keyFor(sketch.src)] ?? [];
+    const count = Math.max(MATERIALIZE_GENERIC_COUNT_MIN, Math.round(elements.length * MATERIALIZE_GENERIC_RATIO));
+    const clips = hotspots.map(([hx, hy]) => genericClip(hx, hy));
+    for (let i = clips.length; i < count; i++) clips.push(genericClip());
+    return clips;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealing, elements, sketch.src]);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const now = performance.now();
+    if (now - lastTrigger.current < HOVER_TRIGGER_INTERVAL) return;
+    lastTrigger.current = now;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - rect.left) / rect.width) * 100;
+    const py = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // usually the real object under/near the cursor, but sometimes a fresh
+    // generic shard/n-gon even when one's right there — otherwise, now that
+    // most of a sketch has a real element nearby, hover would always render
+    // the exact same static shape at a given spot instead of ever varying
+    const hit = Math.random() < HOVER_GENERIC_CHANCE ? null : nearestElement(elements, px, py);
+    const clip = hit ? polygonClip(hit.points) : genericClip(px, py);
+
+    const id = nextId.current++;
+    setHoverPatches((prev) => [...prev, { id, clip }]);
+    setTimeout(() => {
+      setHoverPatches((prev) => prev.filter((p) => p.id !== id));
+    }, HOVER_PATCH_LIFETIME);
+  }
+
+  return (
+    <div className="relative h-full w-full overflow-hidden" onMouseMove={handleMouseMove}>
+      {/* always-correct steady base — the materialize/hover layers animate on top */}
+      <SketchImg sketch={sketch} className="reveal-img pointer-events-none h-full w-full select-none object-contain" />
+      {revealing &&
+        elements.map((el) => (
+          <MaterializeElement key={el.label} sketch={sketch} clip={polygonClip(el.points)} />
         ))}
-      </div>
+      {genericClips.map((clip, i) => (
+        <MaterializeElement key={`generic-${i}`} sketch={sketch} clip={clip} />
+      ))}
+      {hoverPatches.map((p) => (
+        <HoverPatch key={p.id} sketch={sketch} clip={p.clip} />
+      ))}
+    </div>
+  );
+}
 
-      {openIndex !== null && (
+function GalleryRow({ row, gap, topIndex }: { row: Sketch[]; gap: string; topIndex: number }) {
+  const { ref, revealing } = useRevealGlitch(MATERIALIZE_REVEAL_MS);
+
+  return (
+    <div ref={ref} className="mx-auto flex max-w-5xl px-6">
+      {row.map((sketch, idx) => (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-paper/90 p-8"
-          onClick={close}
+          key={sketch.src}
+          style={{
+            aspectRatio: "3 / 4",
+            marginLeft: idx > 0 ? gap : "0%",
+            zIndex: idx === topIndex ? 1 : 0,
+          }}
+          className="relative block flex-1 select-none"
         >
-          <span className="absolute left-4 top-4 text-sm text-ink">
-            {openIndex + 1} / {sketches.length}
-          </span>
-
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-ink text-base text-paper"
-          >
-            ×
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              prev();
-            }}
-            aria-label="Previous sketch"
-            className="absolute left-4 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-ink text-base text-paper"
-          >
-            ‹
-          </button>
-
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={sketches[openIndex]}
-            alt=""
-            className="max-h-full max-w-full object-contain"
-            style={{ filter: `invert(1) brightness(${BRIGHTNESS[openIndex] ?? "1"})` }}
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              next();
-            }}
-            aria-label="Next sketch"
-            className="absolute right-4 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-ink text-base text-paper"
-          >
-            ›
-          </button>
+          <GalleryImage sketch={sketch} revealing={revealing} />
         </div>
-      )}
+      ))}
+    </div>
+  );
+}
+
+export function GalleryGrid({ rows, intros }: { rows: Sketch[][]; intros: React.ReactNode[] }) {
+  return (
+    <>
+      {rows.map((row, r) => (
+        <div key={r}>
+          {intros[r]}
+          <GalleryRow row={row} gap={ROW_GAPS[r] ?? "-2%"} topIndex={TOP_INDEX[r] ?? 1} />
+        </div>
+      ))}
     </>
   );
 }
