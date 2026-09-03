@@ -19,10 +19,11 @@
   --color-muted: #898989;  /* secondary text */
   --color-line: #1d1d1d;   /* borders, dividers */
 
-  /* Typefaces: three roles */
+  /* Typefaces: four roles */
   --font-display: ui-serif, Georgia, serif;          /* headings */
   --font-body: ui-sans-serif, system-ui, sans-serif; /* body copy */
   --font-mono: var(--font-geist-mono), ui-monospace, monospace; /* intro/caption text */
+  --font-link: var(--font-rock-salt), cursive;       /* inline links inside GlitchText */
 
   /* Type scale: rem, each paired with a line-height */
   --text-sm: 0.875rem;
@@ -211,59 +212,6 @@
 }
 
 /*
- * "Andrew Rusli" title: each star is one sampled cell of the blackletter
- * glyph coverage (see titleGrid.ts), drawn as a small SVG sparkle mark (not
- * text — a glyph's font-size can't vary per-star and stay on the fixed type
- * scale). At rest it's ink-colored with a steady low red/cyan glow, like a
- * CRT phosphor. On reveal every star flickers up through the same glitch
- * fringe as the rest of the site, staggered per star via animation-delay.
- */
-.title-star {
-  color: var(--color-ink);
-  filter: drop-shadow(1px 0 2px rgba(255, 45, 85, 0.55)) drop-shadow(-1px 0 2px rgba(51, 204, 255, 0.55));
-  /* steady rest look — matches the animation's own 100% keyframe, so
-     removing .is-revealing after a burst never snaps to a different state */
-  opacity: 1;
-}
-
-.title-star.is-revealing {
-  animation: title-star-in 900ms steps(1, end) 1 forwards;
-}
-
-@keyframes title-star-in {
-  0% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-    filter: drop-shadow(2px 0 3px rgba(255, 45, 85, 0.85)) drop-shadow(-2px 0 3px rgba(51, 204, 255, 0.85));
-  }
-  50% {
-    opacity: 0.2;
-  }
-  65% {
-    opacity: 1;
-    filter: drop-shadow(-2px 1px 3px rgba(255, 45, 85, 0.85)) drop-shadow(2px -1px 3px rgba(51, 204, 255, 0.85));
-  }
-  80% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 1;
-    filter: drop-shadow(1px 0 2px rgba(255, 45, 85, 0.55)) drop-shadow(-1px 0 2px rgba(51, 204, 255, 0.55));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .title-star {
-    opacity: 1;
-  }
-  .title-star.is-revealing {
-    animation: none;
-  }
-}
-
-/*
  * Text selection: dark, not the browser-default blue, with the same
  * red/cyan chromatic fringe as the icon glitch (diagonal, not just
  * horizontal). ::selection can't run a CSS animation or transition
@@ -277,7 +225,7 @@
 }
 
 ::selection {
-  background: rgba(20, 20, 20, 0.85);
+  background: rgba(70, 70, 70, 0.85);
   color: var(--color-ink);
   text-shadow:
     var(--sel-x) var(--sel-y) #ff2d55,

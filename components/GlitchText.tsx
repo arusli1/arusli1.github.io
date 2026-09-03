@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
 // baseline: a small, fixed, close fringe — not zero, and not moving on its
 // own. A twitch snaps out further for a moment, then back to this exact spot.
@@ -12,11 +12,25 @@ const HOVER_ROLL_INTERVAL = 90;
 // how long a rolled chunk stays eligible to twitch — a timestamp, not a
 // mouseleave flag, so a missed leave event can never leave it glitching
 const HOVER_CHUNK_LIFETIME = 420;
-// a reveal burst holds each character for this long, staggered per-char, so
-// the burst tapers off character by character instead of every character
-// cutting out on the same frame
-const REVEAL_BASE = 350;
-const REVEAL_STAGGER = 350;
+
+// scroll-reveal: text splits into big contiguous chunks, each chunk pulsing
+// glitch/normal/glitch/normal in sync (one shared offset per chunk per
+// pulse) rather than every character fading out independently. Each chunk
+// rolls its own pulse count/durations so chunks don't all glitch in lockstep.
+const REVEAL_CHUNK_MIN = 8;
+const REVEAL_CHUNK_MAX = 18;
+const REVEAL_CHUNK_STAGGER_MIN = 25; // ms between one chunk starting and the next
+const REVEAL_CHUNK_STAGGER_MAX = 55;
+const REVEAL_ON_MIN = 45;
+const REVEAL_ON_MAX = 80;
+const REVEAL_OFF_MIN = 28;
+const REVEAL_OFF_MAX = 58;
+const REVEAL_CYCLES_MIN = 1;
+const REVEAL_CYCLES_MAX = 2;
+
+// links always glitch as one synced block, never per-char, on hover/select
+const LINK_TWITCH_REROLL_MIN = 90;
+const LINK_TWITCH_REROLL_MAX = 170;
 
 function shadow(x: string, y: string) {
   return `${x} ${y} #ff2d55, calc(${x} * -1) calc(${y} * -1) #33ccff`;
@@ -31,7 +45,18 @@ function rollChunkLength() {
   return 7 + Math.floor(Math.random() * 10); // 7-16 chars, spans words
 }
 
-export function GlitchText({ text, reveal = false }: { text: string; reveal?: boolean }) {
+// a run of plain text, or a run that should render as a clickable link
+export type GlitchSegment = string | { text: string; href: string };
+
+export function GlitchText({
+  content,
+  reveal = false,
+}: {
+  content: GlitchSegment | GlitchSegment[];
+  reveal?: boolean;
+}) {
+  const segments = Array.isArray(content) ? content : [content];
+  const text = segments.map((s) => (typeof s === "string" ? s : s.text)).join("");
   const rootRef = useRef<HTMLSpanElement>(null);
   const revealApiRef = useRef<{ triggerReveal: () => void } | null>(null);
   const wasRevealingRef = useRef(false);
@@ -43,11 +68,20 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
     const chars = Array.from(root.querySelectorAll<HTMLSpanElement>("span"));
     const indexOf = new Map<HTMLSpanElement, number>(chars.map((el, i) => [el, i]));
 
+    // per-char: the link <a> this char lives inside, or null for plain text
+    const linkOf = chars.map((el) => el.closest<HTMLAnchorElement>("a.font-link"));
+    const linkTwitchUntil = new Map<HTMLAnchorElement, number>(); // current synced-offset hold expiry
+    const linkTwitchValue = new Map<HTMLAnchorElement, { sign: number; mag: number }>();
+
     const until = chars.map(() => 0); // per-char twitch hold expiry
     const twitching = chars.map(() => false);
     const hoverUntil = chars.map(() => 0); // per-char hover-eligibility expiry
-    const revealUntil = chars.map(() => 0); // per-char reveal-eligibility expiry
-    let selectionActive = false;
+    const revealChunkStart = chars.map(() => 0); // per-char: this char's reveal-chunk start time, 0 = none scheduled
+    // per-char: shared reference to its chunk's rolled schedule — cumulative
+    // ms boundaries, alternating on/off/on/off/..., last entry = total duration
+    const revealSchedule: (number[] | null)[] = chars.map(() => null);
+    const revealTwitchCache = new Map<string, { sign: number; mag: number }>(); // one shared offset per chunk per pulse
+    const selected = chars.map(() => false); // per-char: inside the current browser selection
     let running = false;
     let raf = 0;
     let lastHoverRoll = 0;
@@ -82,13 +116,88 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
       twitch(el, Math.random() < 0.5 ? -1 : 1, 1.4 + Math.random() * 0.8);
     }
 
+    // hover/selection eligibility only — reveal is handled separately below
+    // since it drives a synced chunk pulse, not per-char independent twitch
     function isEligible(i: number, now: number) {
-      return selectionActive || now < hoverUntil[i] || now < revealUntil[i];
+      return selected[i] || now < hoverUntil[i];
+    }
+
+    // which segment of its chunk's schedule char i is in right now: even
+    // index = an "on" (glitch) pulse, odd = an "off" (normal) gap. null if
+    // no reveal is scheduled/running for this char.
+    function revealSegment(i: number, now: number): { on: boolean; seg: number } | null {
+      const start = revealChunkStart[i];
+      const sched = revealSchedule[i];
+      if (!start || !sched || now < start) return null;
+      const elapsed = now - start;
+      if (elapsed >= sched[sched.length - 1]) return null;
+      for (let j = 0; j < sched.length; j++) {
+        if (elapsed < sched[j]) return { on: j % 2 === 0, seg: j };
+      }
+      return null;
+    }
+
+    function revealPending(i: number, now: number) {
+      const start = revealChunkStart[i];
+      const sched = revealSchedule[i];
+      return !!start && !!sched && now < start + sched[sched.length - 1];
     }
 
     function loop(now: number) {
       let anyEligible = false;
+      let anyRevealPending = false;
+
       chars.forEach((el, i) => {
+        if (revealPending(i, now)) anyRevealPending = true;
+
+        const seg = revealSegment(i, now);
+        if (seg?.on) {
+          // every char in the same chunk, same pulse, shares one offset —
+          // that's what reads as a chunk glitching together
+          const key = `${revealChunkStart[i]}:${seg.seg}`;
+          let t = revealTwitchCache.get(key);
+          if (!t) {
+            t = { sign: Math.random() < 0.5 ? -1 : 1, mag: 1.6 + Math.random() * 1.2 };
+            revealTwitchCache.set(key, t);
+          }
+          twitch(el, t.sign, t.mag);
+          active[i] = true;
+          twitching[i] = true;
+          anyEligible = true;
+          return;
+        }
+
+        const link = linkOf[i];
+        if (link) {
+          const eligible = selected[i] || now < hoverUntil[i];
+          if (!eligible) {
+            if (active[i]) {
+              clear(el);
+              active[i] = false;
+              twitching[i] = false;
+            }
+            return;
+          }
+
+          anyEligible = true;
+          // every char of the same link shares one offset, re-rolled
+          // together on an interval — reads as the whole link glitching
+          // as a block, never letter by letter
+          const twitchUntil = linkTwitchUntil.get(link) ?? 0;
+          if (now >= twitchUntil) {
+            linkTwitchValue.set(link, { sign: Math.random() < 0.5 ? -1 : 1, mag: 1.6 + Math.random() * 1.2 });
+            linkTwitchUntil.set(
+              link,
+              now + LINK_TWITCH_REROLL_MIN + Math.random() * (LINK_TWITCH_REROLL_MAX - LINK_TWITCH_REROLL_MIN),
+            );
+          }
+          const t = linkTwitchValue.get(link)!;
+          twitch(el, t.sign, t.mag);
+          active[i] = true;
+          twitching[i] = true;
+          return;
+        }
+
         const eligible = isEligible(i, now);
 
         if (!eligible) {
@@ -127,7 +236,7 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
         const start = Math.floor(Math.random() * (chars.length - len + 1));
         let allEligible = true;
         for (let i = start; i < start + len; i++) {
-          if (!isEligible(i, now)) {
+          if (linkOf[i] || !isEligible(i, now)) {
             allEligible = false;
             break;
           }
@@ -145,7 +254,7 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
         }
       }
 
-      if (!reduceMotion && anyEligible) {
+      if (!reduceMotion && (anyEligible || anyRevealPending)) {
         raf = requestAnimationFrame(loop);
       } else {
         running = false;
@@ -176,6 +285,16 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
       const idx = target ? indexOf.get(target) : undefined;
       if (idx === undefined) return;
 
+      const link = linkOf[idx];
+      if (link) {
+        const expiry = now + HOVER_CHUNK_LIFETIME;
+        for (let i = 0; i < chars.length; i++) {
+          if (linkOf[i] === link) hoverUntil[i] = Math.max(hoverUntil[i], expiry);
+        }
+        ensureRunning();
+        return;
+      }
+
       const len = rollChunkLength();
       const jitter = Math.floor((Math.random() - 0.5) * 4);
       const start = Math.max(0, Math.min(chars.length - len, idx - Math.floor(len / 2) + jitter));
@@ -187,14 +306,61 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
     }
 
     function onSelectionChange() {
-      selectionActive = !!document.getSelection()?.toString();
-      if (selectionActive) ensureRunning();
+      const sel = document.getSelection();
+      // real Range check per character, not "is anything selected anywhere
+      // on the page" — otherwise selecting one word glitches every
+      // GlitchText instance in full, not just the characters actually
+      // highlighted
+      const range = sel && sel.rangeCount > 0 && sel.toString() ? sel.getRangeAt(0) : null;
+      let any = false;
+      for (let i = 0; i < chars.length; i++) {
+        const isSelected = !!range && range.intersectsNode(chars[i]);
+        selected[i] = isSelected;
+        if (isSelected) any = true;
+      }
+      if (any) ensureRunning();
+    }
+
+    // cumulative on/off boundaries for one chunk's pulse count/durations,
+    // rolled fresh per chunk so chunks don't all glitch in lockstep
+    function rollRevealSchedule() {
+      const cycles = REVEAL_CYCLES_MIN + Math.floor(Math.random() * (REVEAL_CYCLES_MAX - REVEAL_CYCLES_MIN + 1));
+      const bounds: number[] = [];
+      let t = 0;
+      for (let c = 0; c < cycles; c++) {
+        t += REVEAL_ON_MIN + Math.random() * (REVEAL_ON_MAX - REVEAL_ON_MIN);
+        bounds.push(t);
+        t += REVEAL_OFF_MIN + Math.random() * (REVEAL_OFF_MAX - REVEAL_OFF_MIN);
+        bounds.push(t);
+      }
+      return bounds;
     }
 
     function triggerReveal() {
-      const now = performance.now();
-      for (let i = 0; i < chars.length; i++) {
-        revealUntil[i] = now + REVEAL_BASE + Math.random() * REVEAL_STAGGER;
+      // chunks stay contiguous ranges (so each one reads as a coherent
+      // run of text), but the ORDER they start glitching in is shuffled —
+      // otherwise it always visibly sweeps top-down/left-to-right
+      const ranges: [number, number][] = [];
+      let i = 0;
+      while (i < chars.length) {
+        const len = REVEAL_CHUNK_MIN + Math.floor(Math.random() * (REVEAL_CHUNK_MAX - REVEAL_CHUNK_MIN + 1));
+        const end = Math.min(chars.length, i + len);
+        ranges.push([i, end]);
+        i = end;
+      }
+      for (let k = ranges.length - 1; k > 0; k--) {
+        const r = Math.floor(Math.random() * (k + 1));
+        [ranges[k], ranges[r]] = [ranges[r], ranges[k]];
+      }
+
+      let start = performance.now();
+      for (const [rangeStart, rangeEnd] of ranges) {
+        const sched = rollRevealSchedule();
+        for (let j = rangeStart; j < rangeEnd; j++) {
+          revealChunkStart[j] = start;
+          revealSchedule[j] = sched;
+        }
+        start += REVEAL_CHUNK_STAGGER_MIN + Math.random() * (REVEAL_CHUNK_STAGGER_MAX - REVEAL_CHUNK_STAGGER_MIN);
       }
       ensureRunning();
     }
@@ -227,9 +393,23 @@ export function GlitchText({ text, reveal = false }: { text: string; reveal?: bo
 
   return (
     <span ref={rootRef}>
-      {Array.from(text).map((ch, i) => (
-        <span key={i}>{ch}</span>
-      ))}
+      {segments.map((seg, si) => {
+        const chars = Array.from(typeof seg === "string" ? seg : seg.text).map((ch, i) => (
+          <span key={i}>{ch}</span>
+        ));
+        if (typeof seg === "string") return <Fragment key={si}>{chars}</Fragment>;
+        return (
+          <a
+            key={si}
+            href={seg.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-link lowercase"
+          >
+            {chars}
+          </a>
+        );
+      })}
     </span>
   );
 }

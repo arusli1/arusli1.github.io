@@ -1,6 +1,6 @@
 "use client";
 
-import { GlitchText } from "@/components/GlitchText";
+import { GlitchText, type GlitchSegment } from "@/components/GlitchText";
 import { useRevealGlitch } from "@/components/useRevealGlitch";
 
 export function Intro({
@@ -8,7 +8,7 @@ export function Intro({
   paragraphs,
 }: {
   className?: string;
-  paragraphs: string[];
+  paragraphs: (string | GlitchSegment[])[];
 }) {
   const { ref, revealing } = useRevealGlitch();
 
@@ -17,7 +17,7 @@ export function Intro({
       <div className="text-left font-mono text-sm leading-relaxed text-ink">
         {paragraphs.map((paragraph, i) => (
           <p key={i} className={i > 0 ? "mt-4" : undefined}>
-            <GlitchText text={paragraph} reveal={revealing} />
+            <GlitchText content={paragraph} reveal={revealing} />
           </p>
         ))}
       </div>

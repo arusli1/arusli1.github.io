@@ -117,7 +117,11 @@ async function checkRoute(browser, baseUrl, route, allowedColors, remSizes, repo
             if (pos !== "fixed" && pos !== "sticky") {
               const r = el.getBoundingClientRect();
               const pr = parent.getBoundingClientRect();
-              const EPS = 1;
+              // a few px of slack: a tall decorative font (e.g. Rock Salt)
+              // can have content-area metrics taller than the surrounding
+              // line-height, which getBoundingClientRect reflects even
+              // though nothing is actually clipped or visually overlapping
+              const EPS = 8;
               if (r.right > pr.right + EPS || r.bottom > pr.bottom + EPS) {
                 results.overflow.push(`${tag} overflows parent <${parent.tagName.toLowerCase()}>`);
               }
