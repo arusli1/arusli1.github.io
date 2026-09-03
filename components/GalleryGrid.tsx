@@ -375,7 +375,6 @@ const GalleryImage = forwardRef<GalleryImageHandle, { sketch: Sketch; revealing:
       const clips = hotspots.map(([hx, hy]) => genericClip(hx, hy));
       for (let i = clips.length; i < count; i++) clips.push(genericClip());
       return clips;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [revealing, elements, sketch.src]);
 
     useImperativeHandle(ref, () => ({
