@@ -42,6 +42,12 @@
 
   /* Radius: one value, used everywhere something is rounded (rounded-base) */
   --radius-base: 0.25rem;
+
+  /* Intro text column width, between the default sm/md steps (max-w-intro) */
+  --container-intro: 30.5rem;
+
+  /* Bio paragraph column width, sized so its wrapped lines fill evenly (max-w-bio) */
+  --container-bio: 26.5rem;
 }
 
 /*

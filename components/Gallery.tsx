@@ -54,17 +54,29 @@ export function Gallery() {
         intros={[
           <Intro
             key="0"
-            className="pb-1 pt-5"
+            className="pb-3.5 pt-4.5"
+            maxWidth="max-w-bio"
+            heading="Andrew Rusli"
             paragraphs={[
-              "Hi! I'm Andrew. I study CS at Harvard, and I like thinking about efficient computing and model architectures.",
-              "I'm currently working on GPU inference optimizations on the TensorRT-LLM team at NVIDIA. Before that, I worked at AWS Annapurna Labs on quantization and kernels for Trainium chips.",
+              [
+                "I study CS at Harvard and currently work on the ",
+                { text: "TensorRT-LLM", href: "https://github.com/NVIDIA/TensorRT-LLM" },
+                " team at ",
+                { text: "NVIDIA", href: "https://www.nvidia.com/en-us/" },
+                ". Before that, I worked on quantization and kernels for ",
+                { text: "Trainium", href: "https://github.com/aws-neuron/nki-library" },
+                " chips at ",
+                { text: "AWS Annapurna Labs", href: "https://www.amazon.jobs/content/en/teams/annapurna-labs" },
+                ".",
+              ],
             ]}
           />,
           <Intro
             key="1"
             className="-mt-1 pb-1 pt-0"
+            maxWidth="max-w-intro"
             paragraphs={[
-              "Once we solve continual learning, I'll spend the rest of my life sketching, animating, and enjoying indie games & music.",
+              "Once we solve continual learning, I'll spend my days sketching characters and playing indie games.",
             ]}
           />,
         ]}
