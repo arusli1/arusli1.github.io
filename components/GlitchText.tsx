@@ -405,7 +405,7 @@ export function GlitchText({
             href={seg.href}
             target={external ? "_blank" : undefined}
             rel={external ? "noopener noreferrer" : undefined}
-            className="font-link lowercase"
+            className="font-link"
           >
             {chars}
           </a>
