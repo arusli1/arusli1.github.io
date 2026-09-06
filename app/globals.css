@@ -23,7 +23,7 @@
   --font-display: ui-serif, Georgia, serif;          /* headings */
   --font-body: ui-sans-serif, system-ui, sans-serif; /* body copy */
   --font-mono: var(--font-geist-mono), ui-monospace, monospace; /* intro/caption text */
-  --font-link: var(--font-rock-salt), cursive;       /* inline links inside GlitchText */
+  --font-link: var(--font-geist-mono), ui-monospace, monospace; /* inline links inside GlitchText — matches surrounding text */
 
   /* Type scale: rem, each paired with a line-height */
   --text-sm: 0.875rem;

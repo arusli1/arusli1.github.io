@@ -1,16 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Rock_Salt } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SocialBar } from "@/components/SocialBar";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const rockSalt = Rock_Salt({
-  variable: "--font-rock-salt",
-  weight: "400",
   subsets: ["latin"],
 });
 
@@ -70,7 +64,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistMono.variable} ${rockSalt.variable}`}>
+    <html lang="en" className={geistMono.variable}>
       <body className="min-h-screen bg-paper text-ink font-body antialiased">
         <script
           type="application/ld+json"
