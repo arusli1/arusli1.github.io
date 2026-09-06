@@ -56,29 +56,15 @@ export function Gallery() {
             key="0"
             className="pb-1 pt-5"
             paragraphs={[
-              [
-                "Hi! I'm Andrew. I study CS at ",
-                { text: "Harvard", href: "https://www.harvard.edu/" },
-                ", and I like thinking about efficient computing and model architectures.",
-              ],
-              [
-                "I'm currently working on GPU inference optimizations on the ",
-                { text: "TensorRT-LLM", href: "https://github.com/NVIDIA/TensorRT-LLM" },
-                " team at ",
-                { text: "NVIDIA", href: "https://www.nvidia.com/en-us/" },
-                ". Before that, I worked at ",
-                { text: "AWS Annapurna Labs", href: "https://www.amazon.jobs/content/en/teams/annapurna-labs" },
-                " on quantization and ",
-                { text: "kernels", href: "https://github.com/aws-neuron/nki-library" },
-                " for Trainium chips.",
-              ],
+              "Hi! I'm Andrew. I study CS at Harvard, and I like thinking about efficient computing and model architectures.",
+              "I'm currently working on GPU inference optimizations on the TensorRT-LLM team at NVIDIA. Before that, I worked at AWS Annapurna Labs on quantization and kernels for Trainium chips.",
             ]}
           />,
           <Intro
             key="1"
             className="-mt-1 pb-1 pt-0"
             paragraphs={[
-              "Once we solve continual learning, I'll spend the rest of my life sketching, climbing, animating, snowboarding, and enjoying indie games & music.",
+              "Once we solve continual learning, I'll spend the rest of my life sketching, animating, and enjoying indie games & music.",
             ]}
           />,
         ]}
