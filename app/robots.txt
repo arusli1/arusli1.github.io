@@ -1,2 +1,4 @@
 User-Agent: *
 Disallow: /sketches/
+
+Sitemap: https://arusli1.github.io/sitemap.xml
